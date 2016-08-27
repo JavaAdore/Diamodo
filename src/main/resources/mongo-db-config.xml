@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.springframework.org/schema/context
+          http://www.springframework.org/schema/context/spring-context-3.0.xsd
+          http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+          http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+	<!-- Default bean name is 'mongo' -->
+	<mongo:db-factory id="mongoDbFactory" host="localhost"
+		port="27017" dbname="eltaiebdb" username="eltaieb" password="eltaieb" />
+
+
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
+	</bean>
+
+
+	<bean id="mongoRepositoryFactory"
+		class="org.springframework.data.mongodb.repository.support.MongoRepositoryFactory">
+		<!-- mongoTemplate comes from AbstractMongoConfiguration -->
+		<constructor-arg ref="mongoTemplate" />
+	</bean>
+
+	<mongo:repositories base-package="com.queue.diamodo.dataaccess.dao"
+		mongo-template-ref="mongoTemplate" />
+
+</beans>
