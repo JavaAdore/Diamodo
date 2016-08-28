@@ -1,26 +1,26 @@
-package com.queue.diamodo.business.exception;
+package com.queue.diamodo.webservice.common;
 
+import java.io.Serializable;
 
-public class DiamodoCheckedException extends Exception {
+public class BusinessError implements Serializable {
 
   /**
-	 * 
-	 */
+   * 
+   */
   private static final long serialVersionUID = 1L;
+
 
   private int errorCode;
 
   private String errorMessage;
 
-  private Object object;
 
 
-
-  public DiamodoCheckedException() {
+  public BusinessError() {
     super();
   }
 
-  public DiamodoCheckedException(int errorCode, String errorMessage) {
+  public BusinessError(int errorCode, String errorMessage) {
     super();
     this.errorCode = errorCode;
     this.errorMessage = errorMessage;
@@ -40,14 +40,6 @@ public class DiamodoCheckedException extends Exception {
 
   public void setErrorMessage(String errorMessage) {
     this.errorMessage = errorMessage;
-  }
-
-  public Object getObject() {
-    return object;
-  }
-
-  public void setObject(Object object) {
-    this.object = object;
   }
 
 

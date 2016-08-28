@@ -9,7 +9,6 @@ import javax.websocket.server.ServerEndpoint;
 
 import org.springframework.stereotype.Component;
 
-import com.queue.diamodo.dataaccess.dto.UserLocationDTO;
 import com.queue.diamodo.webservice.websocket.utils.UserLocationDecoder;
 
 @Component
@@ -19,7 +18,7 @@ public class DiamodoEndPoint {
 
 
   @OnMessage
-  public void onMessage(UserLocationDTO userLocationDTO) {
+  public void onMessage(Object userLocationDTO) {
 
 
   }
