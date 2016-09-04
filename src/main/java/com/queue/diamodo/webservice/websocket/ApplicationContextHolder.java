@@ -24,11 +24,19 @@ public class ApplicationContextHolder implements ApplicationContextAware {
   }
 
 
-  public static <T> T getBean(Class<T> class1) {
-    return APPLICATION_CONTEXT.getBean(class1);
+  public static <T> T createSpringBean(Class<T> class1,Object ... args) {
+     return APPLICATION_CONTEXT.getBean(class1, args);
+    
   }
 
   public static DiamodoManagement getDiamodoManagement() {
-    return getBean(DiamodoManagement.class);
+    return createSpringBean(DiamodoManagement.class);
   }
+  
+  
+  public static <T> T createSpringBean(String name,Object ... args) {
+    return (T) APPLICATION_CONTEXT.getBean(name, args);
+   
+ }
+
 }

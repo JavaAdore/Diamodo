@@ -4,13 +4,15 @@ import java.io.Serializable;
 import java.util.Date;
 
 import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
-   
+@Document
 public class Friendship implements Serializable {
 
 
@@ -22,81 +24,36 @@ public class Friendship implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
+  @Id
+  private String id;
 
-  private String id = new ObjectId().toString();
-
-  
   @JsonIgnore
-  @DBRef
-  private DiamodoClient friend;
+  @DBRef(lazy = true)
+  private DiamodoClient partOne;
+
+
+
+  @JsonIgnore
+  @DBRef(lazy = true)
+  private DiamodoClient partTwo;
+
 
 
   @Indexed
-  private String friendShipRequestSender;
+  @JsonIgnore
+  @DBRef(lazy = true)
+  private DiamodoClient friendShipRequestSender;
 
   private Date friendshipDate = new Date();
 
-  private int friendShipStatus;
+  @JsonIgnore
+  private int partOneFrienshipStatus;
+  @JsonIgnore
+  private int partTwoFrienshipStatus;
 
   private boolean seen;
 
 
-
-  public String getFriendShipRequestSender() {
-    return friendShipRequestSender;
-  }
-
-  public void setFriendShipRequestSender(String friendShipRequestSender) {
-    this.friendShipRequestSender = friendShipRequestSender;
-  }
-
-  public int getFriendShipStatus() {
-    return friendShipStatus;
-  }
-
-  public void setFriendShipStatus(int friendShipStatus) {
-    this.friendShipStatus = friendShipStatus;
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
-  }
-
-  public boolean isSeen() {
-    return seen;
-  }
-
-  public void setSeen(boolean seen) {
-    this.seen = seen;
-  }
-
-  public Date getFriendshipDate() {
-    return friendshipDate;
-  }
-
-  public void setFriendshipDate(Date friendshipDate) {
-    this.friendshipDate = friendshipDate;
-  }
-
-  public DiamodoClient getFriend() {
-    return friend;
-  }
-
-
-
-  public String getFriendId() {
-    return friend != null ? friend.getId() : null;
-  }
-
-  public void setFriend(DiamodoClient friend) {
-    this.friend = friend;
-  }
-  
-  
 
   @Override
   public int hashCode() {
@@ -123,7 +80,80 @@ public class Friendship implements Serializable {
     return true;
   }
 
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public DiamodoClient getPartOne() {
+    return partOne;
+  }
+
+  public void setPartOne(DiamodoClient partOne) {
+    this.partOne = partOne;
+  }
+
+  public DiamodoClient getPartTwo() {
+    return partTwo;
+  }
+
+  public void setPartTwo(DiamodoClient partTwo) {
+    this.partTwo = partTwo;
+  }
+
+  public DiamodoClient getFriendShipRequestSender() {
+    return friendShipRequestSender;
+  }
+
+  public void setFriendShipRequestSender(DiamodoClient friendShipRequestSender) {
+    this.friendShipRequestSender = friendShipRequestSender;
+  }
+
+  public Date getFriendshipDate() {
+    return friendshipDate;
+  }
+
+  public void setFriendshipDate(Date friendshipDate) {
+    this.friendshipDate = friendshipDate;
+  }
+
+  public int getPartOneFrienshipStatus() {
+    return partOneFrienshipStatus;
+  }
+
+  public void setPartOneFrienshipStatus(int partOneFrienshipStatus) {
+    this.partOneFrienshipStatus = partOneFrienshipStatus;
+  }
+
+
+
+  public boolean isSeen() {
+    return seen;
+  }
+
+  public void setSeen(boolean seen) {
+    this.seen = seen;
+  }
+
+  
+  public String friendId()
+  {
+    return (partTwo!=null)? partTwo.getId():""; 
+  }
   
   
+  
+
+  public int getPartTwoFrienshipStatus() {
+    return partTwoFrienshipStatus;
+  }
+
+  public void setPartTwoFrienshipStatus(int partTwoFrienshipStatus) {
+    this.partTwoFrienshipStatus = partTwoFrienshipStatus;
+  }
+
 
 }

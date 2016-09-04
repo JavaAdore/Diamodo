@@ -3,7 +3,11 @@ package com.queue.diamodo.dataaccess.dto;
 import java.io.Serializable;
 import java.util.Date;
 
-public class UserInfoDTO extends SignUpDTO implements Serializable {
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.queue.diamodo.common.document.ProfileImage;
+
+public class UserInfoDTO extends BasicClientInfoDTO implements Serializable {
 
 
   /**
@@ -16,6 +20,18 @@ public class UserInfoDTO extends SignUpDTO implements Serializable {
   private String userToken;
 
   private Date registrationDate;
+  
+  
+  @JsonIgnore
+  private ProfileImage currentProfileImage;
+
+
+  @JsonProperty(value = "profileImage")
+  public String profileImage() {
+    return (currentProfileImage != null && currentProfileImage.getProfilePictureName() != null) ? currentProfileImage
+        .getProfilePictureName() : null;
+  }
+
 
   public String getUserToken() {
     return userToken;
@@ -39,6 +55,22 @@ public class UserInfoDTO extends SignUpDTO implements Serializable {
 
   public void setRegistrationDate(Date registrationDate) {
     this.registrationDate = registrationDate;
+  }
+
+  @Override
+  public String toString() {
+    return "UserInfoDTO [id=" + id + ", userToken=" + userToken + ", registrationDate="
+        + registrationDate + ", toString()=" + super.toString() + "]";
+  }
+
+
+  public ProfileImage getCurrentProfileImage() {
+    return currentProfileImage;
+  }
+
+
+  public void setCurrentProfileImage(ProfileImage currentProfileImage) {
+    this.currentProfileImage = currentProfileImage;
   }
 
 

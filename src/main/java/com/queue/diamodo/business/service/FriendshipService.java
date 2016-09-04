@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.queue.diamodo.business.exception.DiamodoCheckedException;
 import com.queue.diamodo.common.document.Friendship;
+import com.queue.diamodo.dataaccess.dto.ClientInfo;
 import com.queue.diamodo.dataaccess.dto.FriendRepresentationDTO;
 import com.queue.diamodo.dataaccess.dto.FriendSearchResult;
 import com.queue.diamodo.dataaccess.dto.FriendsSearchCriteriaDTO;
@@ -26,6 +27,12 @@ public interface FriendshipService {
 
   List<FriendRepresentationDTO> getMyFriendshipRequests(String clientId, PagingDTO pagingDTO) throws DiamodoCheckedException;
 
+  void validateConversationMemebers(String clientId, String conversationId) throws DiamodoCheckedException;
+
+
+  ClientInfo getClientInfo(String clientId);
+
+  Friendship getfriendshipById(String destinationId);
 
 
 }

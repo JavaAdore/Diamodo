@@ -66,7 +66,7 @@ public class FriendshipController {
     try {
 
       Friendship friendShip = diamodoManagement.sendFriendRequest(clientId, friendId);
-
+    
       return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(
           DiamodoResourceBundleUtils.FRIEND_REQUEST_SENT_SUCCESSFULLY_MESSAGE, friendShip));
     } catch (DiamodoCheckedException ex) {
@@ -85,11 +85,15 @@ public class FriendshipController {
   public ResponseEntity<DiamodoResponse> acceptFriendship(@RequestHeader(name = "clientId",
       required = true) String clientId, @PathVariable String friendshipId, Locale locale) {
     try {
-
+      
+      System.out.println("accept friend request ");
+      System.out.println("friendship id is " + friendshipId);
+      System.out.println("client id  is " + clientId );
+      
       diamodoManagement.acceptFriendShip(clientId, friendshipId);
 
       return ResponseEntity.ok(DiamodoResponse
-          .prepareSuccessResponse(DiamodoResourceBundleUtils.REJECT_FRIEND_REQUEST_SUCCESS_MESSAGE));
+          .prepareSuccessResponse(DiamodoResourceBundleUtils.ACCEPT_FRIEND_REQUEST_MESSAGE));
     } catch (DiamodoCheckedException ex) {
       return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
           DiamodoResponse.prepareFailureResponse(ex, locale));
@@ -108,6 +112,11 @@ public class FriendshipController {
       required = true) String clientId, @PathVariable String friendshipId, Locale locale) {
     try {
 
+      System.out.println("reject friend request ");
+      System.out.println("friendship id is " + friendshipId);
+      System.out.println("client id  is " + clientId );
+      
+      
       diamodoManagement.rejectFriendship(clientId, friendshipId);
 
       return ResponseEntity.ok(DiamodoResponse
@@ -164,7 +173,7 @@ public class FriendshipController {
 
   }
 
-
+  
   @RequestMapping(method = RequestMethod.POST, value = "/getMyFriendshipRequests")
   public ResponseEntity<DiamodoResponse> getMyFriendshipRequests(@RequestHeader(name = "clientId",
       required = true) String clientId, @RequestBody PagingDTO pagingDTO, Locale locale) {

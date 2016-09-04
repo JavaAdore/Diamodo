@@ -2,13 +2,30 @@ package com.queue.diamodo.common.utils;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.UUID;
 
+import javax.imageio.ImageIO;
+
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.codec.Base64;
 
 import sun.misc.BASE64Decoder;
 
+import com.google.gson.Gson;
 import com.queue.diamodo.common.exception.InvalidFileFormatException;
 
 public class Utils {
@@ -39,18 +56,16 @@ public class Utils {
     return str == null || str.trim().length() == 0;
   }
 
+
+  public static boolean isNotEmpty(String str) {
+    return !isEmpty(str);
+  }
+
   public static boolean isValidEmailAddress(String email) {
     return email.matches(EMAIL_ADDRESS_PATTERN);
   }
 
 
-
-  public static void main(String[] args) {
-
-    boolean result = "محمود ".matches(USER_NAME_PATTERN);
-
-    System.out.println(result);
-  }
 
   public static boolean isValidUserName(String userName) {
 
@@ -83,7 +98,7 @@ public class Utils {
   }
 
   public static String fixFileName(String fullFileName) {
-    return fullFileName.replace(SPACE, UNDERSCORE);
+    return fullFileName.replace(SPACE, UNDERSCORE) + ".png";
   }
 
   public static boolean isEmpty(List list) {
@@ -104,19 +119,77 @@ public class Utils {
 
   public static byte[] decodeToImage(String imageString) throws InvalidFileFormatException {
     try {
-      BufferedImage image = null;
       byte[] imageByte;
       BASE64Decoder decoder = new BASE64Decoder();
-
       imageByte = decoder.decodeBuffer(imageString);
-
-      ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
-
       return imageByte;
     } catch (Exception ex) {
       ex.printStackTrace();
       throw new InvalidFileFormatException();
     }
+  }
+
+  public static boolean areMatched(String userToken, String registeredUserToken) {
+    return userToken.equals(registeredUserToken);
+  }
+
+  public static String prepareArgsString(Object[] args) {
+    StringBuilder stringBuilder = new StringBuilder();
+    if (args != null) {
+
+      for (Object obj : args) {
+        stringBuilder.append(obj.toString());
+        stringBuilder.append(" ,");
+
+
+      }
+    }
+    int indexOfLastComma = stringBuilder.indexOf(",");
+    if (indexOfLastComma != -1) {
+      return stringBuilder.substring(0, indexOfLastComma);
+    }
+    return stringBuilder.toString();
+  }
+
+
+
+  public static Date getTimeInUTC() {
+    TimeZone timeZone = TimeZone.getTimeZone("UTC");
+    Calendar calendar = Calendar.getInstance(timeZone);
+    SimpleDateFormat simpleDateFormat =
+        new SimpleDateFormat("EE MMM dd HH:mm:ss zzz yyyy", Locale.US);
+    simpleDateFormat.setTimeZone(timeZone);
+    return calendar.getTime();
+  }
+
+
+  public static <T> T JsonToObject(Object obj, Class<T> cls) {
+    if (obj != null && cls != null) {
+      Gson gson = new Gson();
+      String objectAsJson = gson.toJson(obj);
+      return gson.fromJson(objectAsJson, cls);
+    }
+    return null;
+  }
+
+
+  public static void saveImageToServer(String base64MessageContent, String imageName) {
+
+    try (InputStream is = new ByteArrayInputStream(Base64.decode(base64MessageContent.getBytes()));
+        OutputStream os = new FileOutputStream(imageName)
+
+    ) {
+
+
+      BufferedImage bufferedImage = ImageIO.read(is);
+
+      ImageIO.write(bufferedImage, "png", os);
+
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+
+
   }
 
 }

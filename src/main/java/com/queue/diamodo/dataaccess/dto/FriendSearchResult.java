@@ -106,6 +106,12 @@ public class FriendSearchResult implements Serializable {
     this.userName = userName;
   }
 
+  @Override
+  public String toString() {
+    return "FriendSearchResult [id=" + id + ", friendshipStatus=" + friendshipStatus + ", email="
+        + email + ", userName=" + userName + "]";
+  }
+
 
 
 }

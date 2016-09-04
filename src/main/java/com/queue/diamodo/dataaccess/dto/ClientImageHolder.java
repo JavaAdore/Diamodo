@@ -19,6 +19,17 @@ public class ClientImageHolder implements Serializable {
     this.base64Image = base64Image;
   }
 
+  @Override
+  public String toString() {
+    return "ClientImageHolder [base64Image has content" + (base64Image!=null) + "]";
+  }
 
+  public boolean hasContent() {
+    return base64Image!=null;
+  }
+
+  
+    
+  
 
 }

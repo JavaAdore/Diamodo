@@ -14,7 +14,7 @@ public class CommonService {
   @Autowired
   private DiamodoClientDAO diamodoClientDAO;
 
-  protected void validatePassword(String password) throws DiamodoCheckedException {
+  public void validatePassword(String password) throws DiamodoCheckedException {
 
     if (Utils.isEmpty(password)) {
       throw new DiamodoCheckedException(DiamodoResourceBundleUtils.PASSWORD_IS_REQUIRED_CODE,
@@ -28,7 +28,7 @@ public class CommonService {
 
   }
 
-  protected void validateLastName(String lastName) throws DiamodoCheckedException {
+  public void validateLastName(String lastName) throws DiamodoCheckedException {
 
     if (Utils.isEmpty(lastName)) {
       throw new DiamodoCheckedException(DiamodoResourceBundleUtils.LAST_NAME_IS_REQUIRED_CODE,
@@ -42,7 +42,7 @@ public class CommonService {
 
   }
 
-  protected void validateFirstName(String firstName) throws DiamodoCheckedException {
+  public void validateFirstName(String firstName) throws DiamodoCheckedException {
     if (Utils.isEmpty(firstName)) {
       throw new DiamodoCheckedException(DiamodoResourceBundleUtils.FIRST_NAME_IS_REQUIRED_CODE,
           DiamodoResourceBundleUtils.FIRST_NAME_IS_REQUIRED_KEY);
@@ -55,7 +55,7 @@ public class CommonService {
 
   }
 
-  protected void validateUserName(String userName) throws DiamodoCheckedException {
+  public void validateUserName(String userName) throws DiamodoCheckedException {
     if (Utils.isEmpty(userName)) {
 
       throw new DiamodoCheckedException(DiamodoResourceBundleUtils.USER_NAME_IS_REQUIRED_CODE,
@@ -71,7 +71,7 @@ public class CommonService {
 
   }
 
-  protected void validateEmail(String email) throws DiamodoCheckedException {
+  public void validateEmail(String email) throws DiamodoCheckedException {
     if (Utils.isEmpty(email)) {
 
       throw new DiamodoCheckedException(DiamodoResourceBundleUtils.EMAIL_IS_REQUIRED_CODE,
@@ -89,21 +89,21 @@ public class CommonService {
   }
 
 
-  protected void throwDiamodException(int errorCode, String errorMessage)
+  public void throwDiamodException(int errorCode, String errorMessage)
       throws DiamodoCheckedException {
     throw new DiamodoCheckedException(errorCode, errorMessage);
 
   }
 
 
-  protected void validateFriend(String friendId) throws DiamodoCheckedException {
+  public void validateFriend(String friendId) throws DiamodoCheckedException {
     if (Utils.isEmpty(friendId) || !diamodoClientDAO.exists(friendId)) {
       throwDiamodException(DiamodoResourceBundleUtils.FRIEND_ACCOUNT_IS_NO_LONGER_EXIST_CODE,
           DiamodoResourceBundleUtils.FRIEND_ACCOUNT_IS_NO_LONGER_EXIST_KEY);
     }
   }
 
-  protected void validateSender(String clientId) throws DiamodoCheckedException {
+  public void validateSender(String clientId) throws DiamodoCheckedException {
 
     if (Utils.isEmpty(clientId) || !diamodoClientDAO.exists(clientId)) {
       throwDiamodException(DiamodoResourceBundleUtils.SENDER_ACCOUNT_IS_NO_LONGER_EXIST_CODE,
@@ -112,12 +112,14 @@ public class CommonService {
 
   }
   
-  protected void validateClientExistance(String clientId) throws DiamodoCheckedException {
+  public void validateClientExistance(String clientId) throws DiamodoCheckedException {
     boolean isUserExist = diamodoClientDAO.exists(clientId);
     if (!isUserExist) {
       throwDiamodException(DiamodoResourceBundleUtils.USER_IS_NOT_EXIST_CODE,
           DiamodoResourceBundleUtils.USER_IS_NOT_EXIST_KEY);
     }
-
   }
+  
+  
+  
 }

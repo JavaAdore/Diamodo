@@ -50,6 +50,12 @@ public class DiamodoCheckedException extends Exception {
     this.object = object;
   }
 
+  @Override
+  public String toString() {
+    return "DiamodoCheckedException [errorCode=" + errorCode + ", errorMessage=" + errorMessage
+        + ", object=" + object + "]";
+  }
+
 
 
 }

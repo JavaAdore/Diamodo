@@ -10,9 +10,11 @@ public class DiamodoResourceBundleUtils {
   public static final String NO_RESULT_FOUND_MESSAGE = "NO_RESULT_FOUND_MESSAGE";
 
   public static final String ACCEPT_FRIEND_REQUEST_MESSAGE = "ACCEPT_FRIEND_REQUEST_MESSAGE";
-  
-  public static final String REJECT_FRIEND_REQUEST_SUCCESS_MESSAGE = "REJECT_FRIEND_REQUEST_SUCCESS_MESSAGE";
 
+  public static final String REJECT_FRIEND_REQUEST_SUCCESS_MESSAGE =
+      "REJECT_FRIEND_REQUEST_SUCCESS_MESSAGE";
+
+  public static final String DEFAULT_SUCCESS_MESSAGE = "DEFAULT_SUCCESS_MESSAGE";
 
   public static final int BACK_END_ERROR_CODE = -99999;
   public static final String BACK_END_ERROR_KEY = "BACK_END_ERROR_KEY";
@@ -119,6 +121,27 @@ public class DiamodoResourceBundleUtils {
 
   public static final int INVALID_ACTION_CODE = -30;
   public static final String INVALID_ACTION_KEY = "INVALID_ACTION_KEY";
+
+  public static final int CLIENT_ID_IS_REQUIRED_CODE = -31;
+  public static final String CLIENT_ID_IS_REQUIRED_KEY = "CLIENT_ID_IS_REQUIRED_KEY";
+
+  public static final int UPDATE_PROFILE_DTO_SHOULD_NOT_BE_EMPTY_CODE = -32;
+  public static final String UPDATE_PROFILE_DTO_SHOULD_NOT_BE_EMPTY_KEY =
+      "UPDATE_PROFILE_DTO_SHOULD_NOT_BE_EMPTY_KEY";
+
+  public static final int UPDATE_PROFILE_MISSING_CLIENT_ID_CODE = -33;
+  public static final String UPDATE_PROFILE_MISSING_CLIENT_ID_KEY =
+      "UPDATE_PROFILE_MISSING_CLIENT_ID_KEY";
+
+  public static final int YOU_ARE_TRYING_TO_UPDATE_MEMBER_PROFILE_CODE = -34;
+  public static final String YOU_ARE_TRYING_TO_UPDATE_MEMBER_PROFILE_KEY =
+      "YOU_ARE_TRYING_TO_UPDATE_MEMBER_PROFILE_KEY";
+
+  public static final int NOT_ACCEPTED_DEVICE_TYPE_CODE = -35;
+  public static final String NOT_ACCEPTED_DEVICE_TYPE_KEY = "NOT_ACCEPTED_DEVICE_TYPE_KEY";
+
+  public static final int DEVICE_TOKEN_IS_REQUIRED_CODE = 0;
+  public static final String DEVICE_TOKEN_IS_REQUIRED_KEY = "DEVICE_TOKEN_IS_REQUIRED_KEY";
 
 
 

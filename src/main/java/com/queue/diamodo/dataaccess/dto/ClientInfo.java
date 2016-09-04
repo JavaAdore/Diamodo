@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.queue.diamodo.common.document.ProfileImage;
 
-public class FriendInfo implements Serializable {
+public class ClientInfo implements Serializable {
 
   /**
    * 
@@ -26,6 +26,12 @@ public class FriendInfo implements Serializable {
   @JsonIgnore
   private ProfileImage currentProfileImage;
 
+
+  @JsonProperty(value = "profileImage")
+  public String profileImage() {
+    return (currentProfileImage != null && currentProfileImage.getProfilePictureName() != null) ? currentProfileImage
+        .getProfilePictureName() : null;
+  }
 
 
   public String getId() {
@@ -68,10 +74,10 @@ public class FriendInfo implements Serializable {
     this.currentProfileImage = currentProfileImage;
   }
 
-  @JsonProperty(value = "profileImage")
-  public String profileImage() {
-    return (currentProfileImage != null && currentProfileImage.getProfilePictureName() != null) ? currentProfileImage
-        .getProfilePictureName() : null;
+  @Override
+  public String toString() {
+    return "FriendInfo [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName
+        + ", email=" + email + ", currentProfileImage=" + currentProfileImage + "]";
   }
 
 

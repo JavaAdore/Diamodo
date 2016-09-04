@@ -2,6 +2,8 @@ package com.queue.diamodo.dataaccess.dto;
 
 import java.io.Serializable;
 
+import com.queue.diamodo.common.utils.Utils;
+
 public class LoginDTO implements Serializable {
 
   /**
@@ -17,7 +19,7 @@ public class LoginDTO implements Serializable {
 
   private String password;
 
-
+  private String userToken;
 
   public String getLoginAttribute() {
     return loginAttribute;
@@ -33,6 +35,24 @@ public class LoginDTO implements Serializable {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+  
+  public void assignRandomToken()
+  {
+    userToken = Utils.generateRandomToken();
+  }
+
+  @Override
+  public String toString() {
+    return "LoginDTO [loginAttribute=" + loginAttribute + ", password=" + password + "]";
+  }
+
+  public String getUserToken() {
+    return userToken;
+  }
+
+  public void setUserToken(String userToken) {
+    this.userToken = userToken;
   }
 
 

@@ -29,4 +29,10 @@ public class PagingDTO implements Serializable {
     this.numberOfResultNeeded = numberOfResultNeeded;
   }
 
+  @Override
+  public String toString() {
+    return "PagingDTO [numberOfResultsToSkip=" + numberOfResultsToSkip + ", numberOfResultNeeded="
+        + numberOfResultNeeded + "]";
+  }
+
 }

@@ -88,6 +88,14 @@ public class DiamodoResponse implements Serializable {
     diamodoResponse.setResult(result);
     return diamodoResponse;
   }
+  
+  
 
+  public static DiamodoResponse prepareDefaultSuccessResponse() {
+    DiamodoResponse diamodoResponse = new DiamodoResponse();
+    diamodoResponse.setMessage(DiamodoResourceBundleUtils.DEFAULT_SUCCESS_MESSAGE);
+    return diamodoResponse;
+
+  }
 
 }

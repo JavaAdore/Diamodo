@@ -3,31 +3,38 @@ package com.queue.diamodo.webservice.controller;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.Gson;
 import com.queue.diamodo.business.exception.DiamodoCheckedException;
 import com.queue.diamodo.business.management.DiamodoManagement;
-import com.queue.diamodo.common.document.DiamodoClient;
 import com.queue.diamodo.common.utils.Utils;
+import com.queue.diamodo.common.velocity.DiamodoTemplateBean;
 import com.queue.diamodo.dataaccess.dao.DiamodoClientDAO;
-import com.queue.diamodo.dataaccess.dto.FriendsSearchCriteriaDTO;
 import com.queue.diamodo.dataaccess.dto.LoginDTO;
 import com.queue.diamodo.dataaccess.dto.SignUpDTO;
 import com.queue.diamodo.dataaccess.dto.UserInfoDTO;
 import com.queue.diamodo.webservice.common.DiamodoResponse;
+import com.queue.diamodo.webservice.websocket.DiamodoEndPoint;
 
 @RestController()
 @RequestMapping("/diamodoClientController")
 public class DiamodoClientController {
 
+  Logger l = LogManager.getLogger(DiamodoClientController.class);
+
   @Autowired
   private DiamodoManagement diamodoManagement;
+  
+ @Autowired
+ private DiamodoTemplateBean velocityBean;
 
 
   @Autowired
@@ -39,18 +46,17 @@ public class DiamodoClientController {
 
     try {
 
-      DiamodoClient diamodoClient = diamodoManagement.signUp(signUpDTO);
+      UserInfoDTO diamodoClient = diamodoManagement.signUp(signUpDTO);
 
       UserInfoDTO userInfo = Utils.mapObjectToAnother(diamodoClient, UserInfoDTO.class);
 
-      String uuid = Utils.generateRandomToken();
 
-      userInfo.setUserToken(uuid);
+
+      reigsterClientInWebsocketEndpoint(userInfo.getId(), userInfo.getUserToken());
 
       return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(userInfo));
 
     } catch (DiamodoCheckedException ex) {
-      ex.printStackTrace();
       return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
           DiamodoResponse.prepareFailureResponse(ex, locale));
     } catch (Exception e) {
@@ -62,62 +68,50 @@ public class DiamodoClientController {
   }
 
 
+  private void reigsterClientInWebsocketEndpoint(String id, String uuid) {
+
+    DiamodoEndPoint.reigsterClientInWebsocketEndpoint(id, uuid);
+
+  }
+
+
   @RequestMapping(value = "/login", produces = {"application/json"})
-  public ResponseEntity<DiamodoResponse> login(@RequestBody(required = true) LoginDTO loginDTO, Locale locale) {
+  public ResponseEntity<DiamodoResponse> login(@RequestBody(required = true) LoginDTO loginDTO,
+      Locale locale) {
 
     try {
 
-      DiamodoClient diamodoClient = diamodoManagement.login(loginDTO);
+      UserInfoDTO userInfo = diamodoManagement.login(loginDTO);
 
-      UserInfoDTO userInfo = Utils.mapObjectToAnother(diamodoClient, UserInfoDTO.class);
 
-      String uuid = Utils.generateRandomToken();
-
-      userInfo.setUserToken(uuid);
+      reigsterClientInWebsocketEndpoint(userInfo.getId(), userInfo.getUserToken());
 
       return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(userInfo));
 
     } catch (DiamodoCheckedException ex) {
-       return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
+      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
           DiamodoResponse.prepareFailureResponse(ex, locale));
-       
+
     } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(DiamodoResponse.prepareBackendErrorResponse(locale));
+      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
+          DiamodoResponse.prepareBackendErrorResponse(locale));
     }
 
   }
 
   @RequestMapping(value = "/test", produces = {"application/json"})
-  public List test() {
-    return diamodoClientDAO.test();
+  public List test(@RequestParam(name = "clientId") String clientId, @RequestParam(
+      name = "conversationId") String conversationId) {
+//    return diamodoManagement.getUnseenMessages(clientId, conversationId);
+    
+      return null;
   }
 
 
 
-  public static void main(String[] args) {
-
-    // LoginDTO signUpDTO = new LoginDTO();
-    // signUpDTO.setLoginAttribute("mahmoud@gmail.com");
-    //
-    // signUpDTO.setPassword("123456");
-    // Gson gson = new Gson();
-    // System.out.println(gson.toJson(signUpDTO));
-
-    FriendsSearchCriteriaDTO friendsSearchCriteriaDTO = new FriendsSearchCriteriaDTO();
-    friendsSearchCriteriaDTO.setNumberOfResultNeeded(10);
-    friendsSearchCriteriaDTO.setNumberOfResultsToSkip(20);
-    friendsSearchCriteriaDTO.setSearchInput("Mohamed@gmail.com");
-
-    // ClientImageHolder clientImageHolder = new ClientImageHolder();
-    // clientImageHolder.setBase64Image("ccczxczxcxz");
-    Gson gson = new Gson();
-    System.out.println(gson.toJson(friendsSearchCriteriaDTO));
-
-  }
 
   @RequestMapping(value = "/resetDB", produces = {"application/json"})
-  public void resetDB()
-  {
+  public void resetDB() {
     diamodoClientDAO.resetDB();
   }
 

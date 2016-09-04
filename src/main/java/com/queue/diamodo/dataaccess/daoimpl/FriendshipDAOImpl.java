@@ -7,9 +7,21 @@ import java.util.stream.Collectors;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.BasicQuery;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation;
+import org.springframework.data.mongodb.core.aggregation.LimitOperation;
+import org.springframework.data.mongodb.core.aggregation.SkipOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
+
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
@@ -17,14 +29,17 @@ import org.springframework.data.mongodb.repository.support.MongoRepositoryFactor
 import org.springframework.data.mongodb.repository.support.SimpleMongoRepository;
 import org.springframework.stereotype.Repository;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.queue.diamodo.common.document.DiamodoClient;
 import com.queue.diamodo.common.document.Friendship;
 import com.queue.diamodo.common.utils.Utils;
 import com.queue.diamodo.dataaccess.dao.FriendshipDAO;
-import com.queue.diamodo.dataaccess.dto.FriendInfo;
+import com.queue.diamodo.dataaccess.dto.ClientInfo;
 import com.queue.diamodo.dataaccess.dto.FriendRepresentationDTO;
 import com.queue.diamodo.dataaccess.dto.FriendSearchResult;
+import com.queue.diamodo.dataaccess.dto.PagingDTO;
 
 @Repository
 public class FriendshipDAOImpl extends SimpleMongoRepository<FriendSearchResult, String> implements
@@ -91,17 +106,21 @@ public class FriendshipDAOImpl extends SimpleMongoRepository<FriendSearchResult,
   @Override
   public Friendship getFriendshipBySenderOrReciever(String clientId, String friendId) {
 
-    Query query =
-        new Query(new Criteria().andOperator(
-            Criteria.where("_id").is(new ObjectId(clientId)),
-            Criteria.where("friendships.friend").is(
-                new DBRef("diamodoClient", new ObjectId(friendId)))));
-    DiamodoClient diamodoClient =
-        mongoOperations.findOne(query, DiamodoClient.class, "diamodoClient");
-    if (Utils.isEmpty(diamodoClient)) {
-      return null;
-    }
-    return Utils.getFirstResult(diamodoClient.getFriendships());
+
+    Criteria criteria =
+        new Criteria().orOperator(
+            Criteria.where("partOne").is(new DBRef("diamodoClient", clientId)).and("partTwo")
+                .is(new DBRef("diamodoClient", friendId)),
+            Criteria.where("partOne").is(new DBRef("diamodoClient", friendId)).and("partTwo")
+                .is(new DBRef("diamodoClient", clientId)));
+
+    Query query = new Query(criteria);
+
+    Friendship friendship = mongoOperations.findOne(query, Friendship.class);
+
+    return friendship;
+
+
   }
 
   @Override
@@ -121,27 +140,37 @@ public class FriendshipDAOImpl extends SimpleMongoRepository<FriendSearchResult,
   @Override
   public Friendship findFriendsById(String clientId, String friendshipId) {
 
-    Query query =
-        new Query(new Criteria().andOperator(Criteria.where("_id").is(new ObjectId(clientId)),
-            Criteria.where("friendships.id").is(new ObjectId(friendshipId))));
+    Criteria criteria =
+        Criteria
+            .where("_id")
+            .is(new ObjectId(friendshipId))
+            .andOperator(
+                new Criteria().orOperator(
+                    Criteria.where("partOne").is(new DBRef("diamodoClient", clientId)), Criteria
+                        .where("partTwo").is(new DBRef("diamodoClient", clientId))));
+    Query query = new Query(criteria);
 
-    query.fields().include("friendships");
+    Friendship friendship = mongoOperations.findOne(query, Friendship.class);
 
-    DiamodoClient diamodoClient =
-        mongoOperations.findOne(query, DiamodoClient.class, "diamodoClient");
-    if (Utils.isEmpty(diamodoClient)) {
-      return null;
-    }
-    return Utils.getFirstResult(diamodoClient.getFriendships());
+    System.out.println("frindship is " + friendshipId);
+
+    return friendship;
+
+
   }
 
   @Override
-  public void updateFriendshipStatus(String clientId, String friendshipId, int friendshipStatus) {
+  public void updatePartOneFriendshipStatus(String clientId, String friendshipId, int friendshipStatus) {
 
-    mongoOperations.updateFirst(
-        new Query(new Criteria().andOperator(Criteria.where("_id").is(new ObjectId(clientId)),
-            Criteria.where("friendships.id").is(new ObjectId(friendshipId)))), new Update().set(
-            "friendships.$.friendShipStatus", friendshipStatus), DiamodoClient.class);
+    Criteria criteria = Criteria.where("_id").is(new ObjectId(friendshipId));
+   
+
+    Query query = new Query(criteria);
+
+
+    Update update = new Update();
+    update.set("partOneFrienshipStatus", friendshipStatus);
+    mongoOperations.updateFirst(query , update , Friendship.class);
 
   }
 
@@ -151,48 +180,126 @@ public class FriendshipDAOImpl extends SimpleMongoRepository<FriendSearchResult,
 
   }
 
-  
+
 
   @Override
-  public List<Friendship> getFrienshipIds(String clientId, int friendShipStatusAlreadyFriend,
-      int numberOfResultNeeded, int numberOfResultsToSkip) {
+  public List<Friendship> getMyFriendshipRequests(String clientId, int numberOfResultNeeded,
+      int numberOfResultsToSkip) {
+
+
+
     Query query =
-        new Query(new Criteria().andOperator(Criteria.where("_id").is(new ObjectId(clientId))));
-    query.fields().include("friendships.id").include("friendships.friendId");
+        new Query().addCriteria(Criteria.where("partTwo.$id").is(new ObjectId(clientId))
+            .and("partTwoFrienshipStatus").is(Friendship.FRIEND_SHIP_STATUS_RECIEVED));;
+    query.skip(numberOfResultsToSkip);
+    query.limit(numberOfResultNeeded);
+    List<Friendship> result = mongoOperations.find(query, Friendship.class, "friendship");
 
-    DiamodoClient diamodoClient = mongoOperations.findOne(query, DiamodoClient.class);
-    if (diamodoClient != null && Utils.isNotEmpty(diamodoClient.getFriendships())) {
-      return diamodoClient.getFriendships();
+    return result;
 
-    }
-    return new ArrayList<Friendship>();
+    // Aggregation aggregation =
+    // newAggregation(
+    // DiamodoClient.class, //
+    // match(where("_id").is(clientId)),
+    // unwind("friendships"),//
+    // match(where("friendships.friendShipStatus").is(status)),
+    // new GroupOperation(Fields.fields("friendships")), new SkipOperation(
+    // numberOfResultsToSkip), new LimitOperation(numberOfResultNeeded));
+    // AggregationResults<FriendRepresentationDTO> ggregationResults =
+    // mongoOperations.aggregate(aggregation, DiamodoClient.class, FriendRepresentationDTO.class);
+    // System.out.println("result of get my frienships with status " + status + " for user "
+    // + clientId + " is " + ggregationResults.getMappedResults());
+    // return ggregationResults.getMappedResults();
+
+
+
+    // DiamodoClient diamodoClient = mongoOperations.getConverter().read(DiamodoClient.class,
+    // result.getUniqueMappedResult().);
+    // List<Friendship> friendship = diamodoClient.getFriendships();
+
   }
 
   @Override
-  public List<FriendRepresentationDTO> getFriendRepresentation(String clientId, int status,
-      int numberOfResultNeeded, int numberOfResultsToSkip) {
+  public Friendship addFriendShip(Friendship friendship) {
+    mongoOperations.save(friendship);
+    return friendship;
+  }
+
+  @Override
+  public void updateFriendshipStatus(String friendshipId, int friendshipSatatus) {
+    Criteria criteria = Criteria.where("_id").is(new ObjectId(friendshipId));
+    Query query = new Query(criteria);
+    Update update = new Update();
+    update.set("partOneFrienshipStatus", friendshipSatatus);
+    update.set("partTwoFrienshipStatus", friendshipSatatus);
+
+    mongoOperations.updateFirst(query, update, Friendship.class);
 
 
-    Query query =
-        new Query(new Criteria().andOperator(Criteria.where("_id").is(new ObjectId(clientId)),
-            Criteria.where("friendships.friendShipStatus").is(status)));
-    query.fields().include("friendships._id").include("friendships.friend");
-    query.limit(numberOfResultNeeded);     
+  }
+
+  @Override
+  public Friendship getfriendshipById(String friendshipId) {
+
+    return mongoOperations.findById(friendshipId, Friendship.class);
+  }
+
+  @Override
+  public List<Friendship> getMyFriends(String clientId, int numberOfResultNeeded,
+      int numberOfResultsToSkip) {
+    Criteria criteria =
+        new Criteria().andOperator(new Criteria().orOperator(
+            Criteria.where("partOne.$id").is(new ObjectId(clientId)),
+            Criteria.where("partTwo.$id").is(new ObjectId(clientId))),
+            Criteria.where("partOneFrienshipStatus").is(
+                Friendship.FRIEND_SHIP_STATUS_ALREADY_FRIEND),
+            Criteria.where("partTwoFrienshipStatus").is(
+                Friendship.FRIEND_SHIP_STATUS_ALREADY_FRIEND));
+
+
+    Query query = new Query(criteria);
     query.skip(numberOfResultsToSkip);
-    DiamodoClient diamodoClient = mongoOperations.findOne(query, DiamodoClient.class);
-    List<FriendRepresentationDTO> result = new ArrayList<FriendRepresentationDTO>();
-    if (Utils.isNotEmpty(diamodoClient)) {
-      List<Friendship> friendshipList = diamodoClient.getFriendships();
-      if (friendshipList != null) {
-
-        friendshipList.parallelStream().forEach(
-            friendship -> {
-              result.add(new FriendRepresentationDTO(friendship.getId(), modelMapper.map(
-                  friendship.getFriend(), FriendInfo.class)));
-            });
-      }
-    }
+    query.limit(numberOfResultNeeded);
+    List<Friendship> result = mongoOperations.find(query, Friendship.class, "friendship");
     return result;
+  }
+
+  @Override
+  public void updateFriendshipSender(String clientId, String friendshipId) {
+    Query query = new Query(Criteria.where("_id").is(new ObjectId(friendshipId)));
+    
+    Update update = new Update();
+    update.set("partOne", new DBRef("diamodoClient", new ObjectId(clientId)));
+    update.set("friendShipRequestSender",  new DBRef("diamodoClient", new ObjectId(clientId)));      
+    mongoOperations.updateFirst(query, update, Friendship.class);
+         
+  }    
+
+  @Override
+  public void updateFriendshipReciever(String friendId, String friendshipId) {
+ Query query = new Query(Criteria.where("_id").is(new ObjectId(friendshipId)));
+    
+    Update update = new Update();
+    update.set("partTwo", new DBRef("diamodoClient", new ObjectId(friendId)));
+    
+    mongoOperations.updateFirst(query, update, Friendship.class);
+    
+  }
+
+  @Override
+  public void updatePartTwoFriendshipStatus(String friendId, String friendshipId, int friendshipStatus) {
+   
+    Criteria criteria = Criteria.where("_id").is(new ObjectId(friendshipId));
+    
+
+    Query query = new Query(criteria);
+
+
+    Update update = new Update();
+    update.set("partTwoFrienshipStatus", friendshipStatus);
+    
+    mongoOperations.updateFirst(query , update , Friendship.class);
+    
   }
 
 

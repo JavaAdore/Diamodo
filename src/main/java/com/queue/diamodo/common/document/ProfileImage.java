@@ -3,10 +3,12 @@ package com.queue.diamodo.common.document;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.persistence.Id;
+
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document
+
 public class ProfileImage implements Serializable {
 
   /**
@@ -14,8 +16,8 @@ public class ProfileImage implements Serializable {
    */
   private static final long serialVersionUID = 1L;
 
-
-  private ObjectId id = new ObjectId();
+  @Id
+  private String id = new ObjectId().toString();
 
 
   private String profilePictureName;
@@ -61,14 +63,15 @@ public class ProfileImage implements Serializable {
   }
 
 
-  public ObjectId getId() {
+  public String getId() {
     return id;
   }
 
 
-  public void setId(ObjectId id) {
+  public void setId(String id) {
     this.id = id;
   }
 
+ 
 
 }

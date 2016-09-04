@@ -12,7 +12,11 @@ public class FriendRepresentationDTO implements Serializable {
   }
   
   
-  public FriendRepresentationDTO(String id, FriendInfo friend) {
+
+
+
+
+  public FriendRepresentationDTO(String id, ClientInfo friend) {
     super();
     this.id = id;
     this.friend = friend;
@@ -26,7 +30,7 @@ public class FriendRepresentationDTO implements Serializable {
   private String id;
 
   
-  private FriendInfo friend;
+  private ClientInfo friend;
 
 
 
@@ -38,12 +42,18 @@ public class FriendRepresentationDTO implements Serializable {
     this.id = id;
   }
 
-  public FriendInfo getFriend() {
+  public ClientInfo getFriend() {
     return friend;
   }
 
-  public void setFriend(FriendInfo friend) {
+  public void setFriend(ClientInfo friend) {
     this.friend = friend;
+  }
+
+
+  @Override
+  public String toString() {
+    return "FriendRepresentationDTO [id=" + id + ", friend=" + friend + "]";
   }
 
 

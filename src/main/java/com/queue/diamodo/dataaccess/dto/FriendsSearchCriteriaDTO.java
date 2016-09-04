@@ -23,6 +23,11 @@ public class FriendsSearchCriteriaDTO extends PagingDTO implements Serializable 
     this.searchInput = searchInput;
   }
 
+  @Override
+  public String toString() {
+    return "FriendsSearchCriteriaDTO [searchInput=" + searchInput + "," + super.toString() + "]";
+  }
+
 
 
 }

@@ -1,20 +1,31 @@
 package com.queue.diamodo.common.document;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.hibernate.annotations.Index;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.queue.diamodo.common.document.base.BaseDocument;
+import com.queue.diamodo.common.utils.Utils;
 
 
 @Document
-public class DiamodoClient extends BaseDocument {
+public class DiamodoClient extends BaseDocument implements Serializable {
 
+
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 1L;
 
   public final static int INITIAL_CAPACITY_OF_PROFILE_PICTURES_LIST = 1;
 
@@ -51,6 +62,13 @@ public class DiamodoClient extends BaseDocument {
 
 
   private ProfileImage currentProfileImage;
+  
+  
+  private ClientDevice clientDevice;
+  
+  
+  private String userToken;
+  
 
   private List<ProfileImage> profilePicturesHistory = new ArrayList<ProfileImage>(0);
 
@@ -60,14 +78,18 @@ public class DiamodoClient extends BaseDocument {
   @Indexed
   private List<String> accountsBlockMe = new ArrayList<String>();
 
-
-
+  @Indexed
+  @DBRef(lazy=true)
   private List<Friendship> friendships = new ArrayList<Friendship>();
 
-
+  
   private List<Friendship> friendshipHistory = new ArrayList<Friendship>();
-
-
+  
+  @Indexed
+  @DBRef(lazy=true)
+  private List<Conversation> memberConversations = new ArrayList<Conversation>();
+  
+  
   public String getId() {
     return id;
   }
@@ -128,11 +150,6 @@ public class DiamodoClient extends BaseDocument {
 
 
 
-  @Override
-  public String toString() {
-    return "DiamodoClient [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName
-        + ", userName=" + userName + ", email=" + email + "]";
-  }
 
 
 
@@ -187,6 +204,57 @@ public class DiamodoClient extends BaseDocument {
   public void setFriendshipHistory(List<Friendship> friendshipHistory) {
     this.friendshipHistory = friendshipHistory;
   }
+
+  @Override
+  public String toString() {
+    return "DiamodoClient [id=" + id +", userName=" + userName + ", email=" + email + "]";
+  }
+
+
+
+  public List<Conversation> getMemberConversations() {
+    return memberConversations;
+  }
+
+
+
+  public void setMemberConversations(List<Conversation> memberConversations) {
+    this.memberConversations = memberConversations;
+  }
+
+
+
+  public ClientDevice getClientDevice() {
+    return clientDevice;
+  }
+
+
+
+  public void setClientDevice(ClientDevice clientDevice) {
+    this.clientDevice = clientDevice;
+  }
+
+
+
+  public String getUserToken() {
+    return userToken;
+  }
+
+
+
+  public void setUserToken(String userToken) {
+    this.userToken = userToken;
+  }
+
+
+  public void assignRandomToken()
+  {
+    userToken = Utils.generateRandomToken();
+  }
+
+
+
+
 
 
 
