@@ -48,9 +48,9 @@ public class DiamodoResponse implements Serializable {
   }
 
 
-  public static DiamodoResponse prepareSuccessResponse(String message) {
+  public static DiamodoResponse prepareSuccessResponse(String message, Locale locale) {
     DiamodoResponse diamodoResponse = new DiamodoResponse();
-    diamodoResponse.setMessage(message);;
+    diamodoResponse.setMessage(DiamodoResourceBundleUtils.getValue(message, locale));;
     return diamodoResponse;
 
   }
@@ -61,7 +61,8 @@ public class DiamodoResponse implements Serializable {
 
     DiamodoResponse diamodoResponse = new DiamodoResponse();
     if (ex.getErrorCode() != 0 && ex.getErrorMessage() != null) {
-      diamodoResponse.setResult(new BusinessError(ex.getErrorCode(), ex.getErrorMessage()));
+      diamodoResponse.setResult(new BusinessError(ex.getErrorCode(), DiamodoResourceBundleUtils
+          .getValue(ex.getErrorMessage(), locale)));
     }
     return diamodoResponse;
   }
@@ -69,31 +70,28 @@ public class DiamodoResponse implements Serializable {
   public static DiamodoResponse prepareBackendErrorResponse(Locale locale) {
     DiamodoResponse diamodoResponse = new DiamodoResponse();
 
-    diamodoResponse.setResult(new BusinessError(DiamodoResourceBundleUtils.BACK_END_ERROR_CODE,
-        DiamodoResourceBundleUtils.BACK_END_ERROR_KEY));
+    diamodoResponse
+        .setResult(new BusinessError(DiamodoResourceBundleUtils.BACK_END_ERROR_CODE,
+            DiamodoResourceBundleUtils.getValue(DiamodoResourceBundleUtils.BACK_END_ERROR_KEY,
+                locale)));
     return diamodoResponse;
   }
 
-  public static DiamodoResponse prepareFailureResponse(String errorCode, String errorKey,
-      Locale locale) {
-    DiamodoResponse diamodoResponse = new DiamodoResponse();
-    diamodoResponse.setResult(new BusinessError(DiamodoResourceBundleUtils.BACK_END_ERROR_CODE,
-        DiamodoResourceBundleUtils.BACK_END_ERROR_KEY));
-    return diamodoResponse;
-  }
 
-  public static DiamodoResponse prepareSuccessResponse(String message, Object result) {
+
+  public static DiamodoResponse prepareSuccessResponse(String message, Object result, Locale locale) {
     DiamodoResponse diamodoResponse = new DiamodoResponse();
-    diamodoResponse.setMessage(message);
+    diamodoResponse.setMessage(DiamodoResourceBundleUtils.getValue(message, locale));
     diamodoResponse.setResult(result);
     return diamodoResponse;
   }
-  
-  
 
-  public static DiamodoResponse prepareDefaultSuccessResponse() {
+
+
+  public static DiamodoResponse prepareDefaultSuccessResponse(Locale locale) {
     DiamodoResponse diamodoResponse = new DiamodoResponse();
-    diamodoResponse.setMessage(DiamodoResourceBundleUtils.DEFAULT_SUCCESS_MESSAGE);
+    diamodoResponse.setMessage(DiamodoResourceBundleUtils.getValue(
+        DiamodoResourceBundleUtils.DEFAULT_SUCCESS_MESSAGE, locale));
     return diamodoResponse;
 
   }

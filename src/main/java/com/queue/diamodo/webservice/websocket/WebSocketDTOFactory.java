@@ -85,14 +85,16 @@ public class WebSocketDTOFactory {
   }
 
 
-
+ 
  
 
 
   private OutboundChatSocketMessage prepareBuzzMessage(
       InboundSocketChatMessage inboundSocketChatMessage) {
 
-    return prepareBaseOutboundChatSocketMessage(inboundSocketChatMessage);
+    OutboundChatSocketMessage outboundChatSocketMessage = prepareBaseOutboundChatSocketMessage(inboundSocketChatMessage);
+    outboundChatSocketMessage.setMessageContent("BUZZ!!");
+    return outboundChatSocketMessage; 
   }
 
 
@@ -117,6 +119,7 @@ public class WebSocketDTOFactory {
     outboundChatSocketMessage.setChatMessageType(inboundSocketChatMessage.getChatMessageType());
     outboundChatSocketMessage.setSenderId(inboundSocketChatMessage.getSenderId());
     outboundChatSocketMessage.setDestinationId(inboundSocketChatMessage.getDestinationId());
+    outboundChatSocketMessage.setMessageContent("");
     return outboundChatSocketMessage;
   }
 

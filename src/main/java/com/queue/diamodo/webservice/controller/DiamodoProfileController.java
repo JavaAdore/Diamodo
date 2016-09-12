@@ -106,7 +106,7 @@ public class DiamodoProfileController {
     try {
         diamodoManagement.updateDeviceToken(clientId, deviceType , deviceToken);
       
-      return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse());
+      return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse(locale));
       
     } catch (DiamodoCheckedException ex) {
       return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
@@ -115,7 +115,7 @@ public class DiamodoProfileController {
     } catch (Exception ex) {
       return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
           DiamodoResponse.prepareBackendErrorResponse(locale));
-
+ 
     }
 
   }

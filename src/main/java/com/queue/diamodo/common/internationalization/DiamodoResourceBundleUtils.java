@@ -1,7 +1,15 @@
 package com.queue.diamodo.common.internationalization;
 
+import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+
+import org.apache.log4j.Logger;
+
 
 public class DiamodoResourceBundleUtils {
+
+  private static Logger logger = Logger.getLogger(DiamodoResourceBundleUtils.class);
 
 
   public static final String FRIEND_REQUEST_SENT_SUCCESSFULLY_MESSAGE =
@@ -140,8 +148,33 @@ public class DiamodoResourceBundleUtils {
   public static final int NOT_ACCEPTED_DEVICE_TYPE_CODE = -35;
   public static final String NOT_ACCEPTED_DEVICE_TYPE_KEY = "NOT_ACCEPTED_DEVICE_TYPE_KEY";
 
-  public static final int DEVICE_TOKEN_IS_REQUIRED_CODE = 0;
+  public static final int DEVICE_TOKEN_IS_REQUIRED_CODE = -36;
   public static final String DEVICE_TOKEN_IS_REQUIRED_KEY = "DEVICE_TOKEN_IS_REQUIRED_KEY";
+
+
+  public static String getValue(String key, Locale locale) {
+    ResourceBundle resourceBundle =
+        ResourceBundle.getBundle(
+            "com.queue.diamodo.common.internationalization.diamodoResouceBundle", locale);
+
+    logger.info(String.format("resource bundle of locale %s %s found ", locale,
+        (locale == null) ? " not " : ""));
+    if (resourceBundle == null) {
+      resourceBundle =
+          ResourceBundle
+              .getBundle("com.queue.diamodo.common.internationalization.diamodoResouceBundle");
+    }
+    try {
+
+      String value = resourceBundle.getString(key);
+      return value;
+
+    } catch (MissingResourceException ex) {
+      logger.info("not able to find value for key " + key + " within locale " + locale);
+      return key;
+
+    }
+  }
 
 
 

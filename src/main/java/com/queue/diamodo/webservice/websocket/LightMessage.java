@@ -15,7 +15,7 @@ public class LightMessage implements Serializable{
   
   private String senderId;
   
-  private String messageContent;
+  private String messageContent="";
   
   private int chatMessageType;
   

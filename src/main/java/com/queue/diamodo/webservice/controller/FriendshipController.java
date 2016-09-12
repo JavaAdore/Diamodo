@@ -47,7 +47,7 @@ public class FriendshipController {
         return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(result));
       } else {
         return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(
-            DiamodoResourceBundleUtils.NO_RESULT_FOUND_MESSAGE, result));
+            DiamodoResourceBundleUtils.NO_RESULT_FOUND_MESSAGE, locale));
       }
     } catch (DiamodoCheckedException ex) {
       return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
@@ -68,7 +68,7 @@ public class FriendshipController {
       Friendship friendShip = diamodoManagement.sendFriendRequest(clientId, friendId);
     
       return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(
-          DiamodoResourceBundleUtils.FRIEND_REQUEST_SENT_SUCCESSFULLY_MESSAGE, friendShip));
+          DiamodoResourceBundleUtils.FRIEND_REQUEST_SENT_SUCCESSFULLY_MESSAGE, friendShip,locale));
     } catch (DiamodoCheckedException ex) {
       return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
           DiamodoResponse.prepareFailureResponse(ex, locale));
@@ -93,7 +93,7 @@ public class FriendshipController {
       diamodoManagement.acceptFriendShip(clientId, friendshipId);
 
       return ResponseEntity.ok(DiamodoResponse
-          .prepareSuccessResponse(DiamodoResourceBundleUtils.ACCEPT_FRIEND_REQUEST_MESSAGE));
+          .prepareSuccessResponse(DiamodoResourceBundleUtils.ACCEPT_FRIEND_REQUEST_MESSAGE,locale));
     } catch (DiamodoCheckedException ex) {
       return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
           DiamodoResponse.prepareFailureResponse(ex, locale));

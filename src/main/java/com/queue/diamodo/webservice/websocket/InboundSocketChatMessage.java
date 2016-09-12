@@ -20,7 +20,7 @@ public class InboundSocketChatMessage implements Serializable {
 
   private String senderToken;
 
-  private String messageContent;
+  private String messageContent="";
 
   private int chatMessageType;
 

@@ -90,7 +90,7 @@ public class ConversationController {
 
     try {
       diamodoManagement.assignNewAdmin(clientId, assignNewAdminsDTO);
-      return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse());
+      return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse(locale));
 
     } catch (DiamodoCheckedException ex) {
       return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
@@ -134,7 +134,7 @@ public class ConversationController {
     try {
       diamodoManagement.leaveConversation(clientId, conversationId);
       DiamodoEndPoint.leaveConversation(clientId, conversationId);
-      return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse());
+      return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse(locale));
 
     } catch (DiamodoCheckedException ex) {
       return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
@@ -180,7 +180,7 @@ public class ConversationController {
 
     try {
       diamodoManagement.inviteMemberToConversation(clientId, inviteMembersToConversationRequest);
-      return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse());
+      return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse(locale));
  
     } catch (DiamodoCheckedException ex) {
       return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(

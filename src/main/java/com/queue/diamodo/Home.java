@@ -3,6 +3,7 @@ package com.queue.diamodo;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import com.google.gson.Gson;
@@ -68,17 +69,21 @@ public class Home {
 //    pagingDTO.setNumberOfResultsToSkip(0);
 //    
     
-    SocketMessage socetMessage = new SocketMessage();
-    socetMessage.setSocketMessageType(SocketMessageType.GET_UNSEEN_MESSAGES);
+//    SocketMessage socetMessage = new SocketMessage();
+//    socetMessage.setSocketMessageType(SocketMessageType.GET_UNSEEN_MESSAGES);
+//    
+//    GetUnSeenMessagesRequest getUnSeenMessagesRequest = new GetUnSeenMessagesRequest();
+//    
+//    getUnSeenMessagesRequest.setClientId("clientId");
+//    getUnSeenMessagesRequest.setConversationId("conversationUd");
+//    getUnSeenMessagesRequest.setUserToken("userToken");
+//    
+//    socetMessage.setData(getUnSeenMessagesRequest);
+//  System.out.println(new Gson().toJson(socetMessage));
     
-    GetUnSeenMessagesRequest getUnSeenMessagesRequest = new GetUnSeenMessagesRequest();
     
-    getUnSeenMessagesRequest.setClientId("clientId");
-    getUnSeenMessagesRequest.setConversationId("conversationUd");
-    getUnSeenMessagesRequest.setUserToken("userToken");
-    
-    socetMessage.setData(getUnSeenMessagesRequest);
-  System.out.println(new Gson().toJson(socetMessage));
+    Locale locale = new Locale("xx");
+    System.out.println(locale);
 
     
   }
