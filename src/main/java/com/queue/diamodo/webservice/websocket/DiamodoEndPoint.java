@@ -137,6 +137,7 @@ public class DiamodoEndPoint extends ApplicationContextHolder {
         // sending message to sender and reciever
 
         sendSocketChatMessageTo(outboundChatSocketMessage, memberId);
+        diamodoManagement.markConversationAsSeen(memberId, outboundChatSocketMessage.getDestinationId());  
 
       } else {
 
@@ -188,6 +189,7 @@ public class DiamodoEndPoint extends ApplicationContextHolder {
     lightConversation.setConversationMemebersId(new HashSet<String>(memberIds));
     lightConversation.setGroupChat(conversation.isGroupChat());
     lightConversation.setConversationName(conversation.getConversationName()); 
+    lightConversation.setConversationId(conversation.getId());    
     LIGHT_CONVERSATIONS_MAP.put(conversation.getId(), lightConversation);
 
 

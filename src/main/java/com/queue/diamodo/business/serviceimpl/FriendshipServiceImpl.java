@@ -176,6 +176,9 @@ public class FriendshipServiceImpl extends CommonService implements FriendshipSe
         throwDiamodException(
             DiamodoResourceBundleUtils.FRIEND_HAS_SENT_YOU_FRIENDSHIP_REQUEST_YOU_CAN_ACCEPT_IT_CODE,
             DiamodoResourceBundleUtils.FRIEND_HAS_SENT_YOU_FRIENDSHIP_REQUEST_YOU_CAN_ACCEPT_IT_KEY);
+      }else if(friendship.getPartOneFrienshipStatus() == Friendship.FRIEND_SHIP_STATUS_ALREADY_FRIEND)
+      {        
+        throwDiamodException(DiamodoResourceBundleUtils.YOU_ARE_ALREADY_FRIENDS_CODE, DiamodoResourceBundleUtils.YOU_ARE_ALREADY_FRIENDS_KEY);
       }
     }
     return friendship;
