@@ -5,9 +5,11 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwind;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort.Direction;
@@ -20,6 +22,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBRef;
 import com.queue.diamodo.common.document.ChatMessage;
@@ -29,7 +32,7 @@ import com.queue.diamodo.common.document.SeenByDTO;
 import com.queue.diamodo.dataaccess.dao.ChatMessageDAO;
 import com.queue.diamodo.dataaccess.dto.GetMyConversationsResponseDTO;
 import com.queue.diamodo.dataaccess.dto.PagingDTO;
-import com.queue.diamodo.webservice.websocket.OutboundChatSocketMessage;
+import com.queue.diamodo.web.webservice.websocket.OutboundChatSocketMessage;
 
 @Repository
 public class ChatMessageDAOImpl implements ChatMessageDAO {

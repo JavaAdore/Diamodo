@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import com.queue.diamodo.webservice.websocket.UserSessionsHolder;
+import com.queue.diamodo.web.webservice.websocket.UserSessionsHolder;
 
 @Configuration
 @PropertySource("classpath:DiamodoConfigurations.properties")

@@ -15,7 +15,7 @@ import com.queue.diamodo.common.velocity.DiamodoTemplateBean;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class,
     HibernateJpaAutoConfiguration.class, SecurityAutoConfiguration.class})
-@ImportResource(locations = {"classpath:/mongo-db-config.xml"})
+@ImportResource(locations = {"classpath:/spring.xml"})
 @ComponentScan(basePackages = {"com.*"})
 public class DiamodoApplication {
 

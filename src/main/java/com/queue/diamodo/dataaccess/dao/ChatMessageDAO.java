@@ -10,7 +10,7 @@ import com.queue.diamodo.dataaccess.dto.ClientInfo;
 import com.queue.diamodo.dataaccess.dto.GetMyConversationsResponseDTO;
 import com.queue.diamodo.dataaccess.dto.InviteMembersToConversationRequest;
 import com.queue.diamodo.dataaccess.dto.PagingDTO;
-import com.queue.diamodo.webservice.websocket.OutboundChatSocketMessage;
+import com.queue.diamodo.web.webservice.websocket.OutboundChatSocketMessage;
 
 public interface ChatMessageDAO {
 

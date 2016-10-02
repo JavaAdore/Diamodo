@@ -21,9 +21,9 @@ import com.queue.diamodo.dataaccess.dto.PagingDTO;
 import com.queue.diamodo.dataaccess.dto.SignUpDTO;
 import com.queue.diamodo.dataaccess.dto.UpdateProfileDTO;
 import com.queue.diamodo.dataaccess.dto.UserInfoDTO;
-import com.queue.diamodo.webservice.websocket.InboundSocketChatMessage;
-import com.queue.diamodo.webservice.websocket.LightConversation;
-import com.queue.diamodo.webservice.websocket.OutboundChatSocketMessage;
+import com.queue.diamodo.web.webservice.websocket.InboundSocketChatMessage;
+import com.queue.diamodo.web.webservice.websocket.LightConversation;
+import com.queue.diamodo.web.webservice.websocket.OutboundChatSocketMessage;
 
 
 public interface DiamodoManagement {

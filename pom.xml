@@ -4,14 +4,15 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.queue.diamodo</groupId>
-	<artifactId>diamodo</artifactId>
+	<artifactId>Diamodo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
 
-	<name>diamodo</name>
-	<description>diamodo</description>
 
-	<parent>
+	<name>diamodo</name>   
+	<description>diamodo</description>
+ 
+	<parent> 
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>1.4.0.RELEASE</version>
@@ -71,7 +72,7 @@
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-velocity -->
-		<dependency> 
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-velocity</artifactId>
 		</dependency>
@@ -105,6 +106,8 @@
 	</dependencies>
 
 	<build>
+		<finalName>Diamodo</finalName>
+
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

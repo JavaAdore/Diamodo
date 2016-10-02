@@ -21,7 +21,7 @@ import com.queue.diamodo.dataaccess.dto.FriendRepresentationDTO;
 import com.queue.diamodo.dataaccess.dto.FriendSearchResult;
 import com.queue.diamodo.dataaccess.dto.FriendsSearchCriteriaDTO;
 import com.queue.diamodo.dataaccess.dto.PagingDTO;
-import com.queue.diamodo.webservice.websocket.DiamodoEndPoint;
+import com.queue.diamodo.web.webservice.websocket.DiamodoEndPoint;
 
 @Service
 public class FriendshipServiceImpl extends CommonService implements FriendshipService {

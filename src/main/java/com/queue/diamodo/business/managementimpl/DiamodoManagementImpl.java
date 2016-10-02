@@ -36,10 +36,10 @@ import com.queue.diamodo.dataaccess.dto.SignUpDTO;
 import com.queue.diamodo.dataaccess.dto.UpdateProfileDTO;
 import com.queue.diamodo.dataaccess.dto.UserInfoDTO;
 import com.queue.diamodo.dataaccess.dto.UserWithDeviceInfo;
-import com.queue.diamodo.webservice.web.pushnotification.PushNotificationManager;
-import com.queue.diamodo.webservice.websocket.InboundSocketChatMessage;
-import com.queue.diamodo.webservice.websocket.LightConversation;
-import com.queue.diamodo.webservice.websocket.OutboundChatSocketMessage;
+import com.queue.diamodo.web.webservice.pushnotification.PushNotificationManager;
+import com.queue.diamodo.web.webservice.websocket.InboundSocketChatMessage;
+import com.queue.diamodo.web.webservice.websocket.LightConversation;
+import com.queue.diamodo.web.webservice.websocket.OutboundChatSocketMessage;
 
 @Service
 public class DiamodoManagementImpl implements DiamodoManagement {
