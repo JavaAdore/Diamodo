@@ -18,6 +18,7 @@ import org.springframework.stereotype.Repository;
 import com.google.gson.Gson;
 import com.queue.diamodo.common.document.ClientDevice;
 import com.queue.diamodo.common.document.DiamodoClient;
+import com.queue.diamodo.common.document.FriendshipHistory;
 import com.queue.diamodo.common.document.ProfileImage;
 import com.queue.diamodo.dataaccess.dao.DiamodoClientDAO;
 import com.queue.diamodo.dataaccess.dto.ClientInfo;
@@ -209,6 +210,8 @@ public class DiamodoClientDAOImpl extends SimpleMongoRepository<DiamodoClient, S
 
 
   }
+
+
 
 
 }

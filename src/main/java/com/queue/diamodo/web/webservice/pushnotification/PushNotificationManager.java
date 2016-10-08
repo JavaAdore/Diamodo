@@ -13,6 +13,7 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.web.client.AsyncRestTemplate;
 import org.springframework.web.client.RestTemplate;
 
+import com.google.gson.Gson;
 import com.queue.diamodo.common.config.DiamodoConfigurations;
 import com.queue.diamodo.common.document.DiamodoClient;
 import com.queue.diamodo.common.velocity.DiamodoTemplateBean;
@@ -24,158 +25,210 @@ import com.queue.diamodo.web.webservice.websocket.LightConversation;
 @Service
 public class PushNotificationManager {
 
-  Logger logger = Logger.getLogger(PushNotificationManager.class);
-  @Autowired
-  private DiamodoTemplateBean diamodoTemplateBean;
+	Logger logger = Logger.getLogger(PushNotificationManager.class);
+	@Autowired
+	private DiamodoTemplateBean diamodoTemplateBean;
 
+	@Autowired
+	AsyncRestTemplate asyncRestTemplate;
 
-  @Autowired
-  AsyncRestTemplate asyncRestTemplate;
+	@Autowired
+	DiamodoConfigurations diamodoConfigurations;
 
-  @Autowired
-  DiamodoConfigurations diamodoConfigurations;
+	public void pushFriendshipRecievedNotification(ClientInfo friendshipRequestSender,
+			UserWithDeviceInfo userWithDeviceInfo) {
 
-  public void pushFriendshipRecievedNotification(ClientInfo friendshipRequestSender,
-      UserWithDeviceInfo userWithDeviceInfo) {
+		String message = diamodoTemplateBean.prepareFriendRequestRecievedMessage(friendshipRequestSender);
 
-    String message =
-        diamodoTemplateBean.prepareFriendRequestRecievedMessage(friendshipRequestSender);
+		Payload payload = Payload.prepareFriendshipRequestRecievedPayload(friendshipRequestSender.getId());
+
+		PushNotificationMessage pushNotificationMessage = preparePushNotificationMessage(userWithDeviceInfo, message,
+				payload);
+		
+		
+		pushToTheClient(pushNotificationMessage);
+		
+	}
+
+	public PushNotificationMessage preparePushNotificationMessage(UserWithDeviceInfo userWithDeviceInfo, String message,
+			Payload payload) {
+
+		PushNotificationMessage pushNotificationMessage = null;
+		if (userWithDeviceInfo.getClientDevice().isAndroidDevice()) {
+
+			logger.info("reciever has android device");
+			pushNotificationMessage = PushNotificationMessage
+					.prepareAndroidPushNotification(userWithDeviceInfo.getClientDevice().getDeviceToken(), message);
+
+		} else if (userWithDeviceInfo.getClientDevice().isIOSDevice()) {
+			logger.info("reciever has ios device");
+			pushNotificationMessage = PushNotificationMessage
+					.prepareIOSPushNotification(userWithDeviceInfo.getClientDevice().getDeviceToken(), message);
+		}
+		pushNotificationMessage.setPayload(payload);
+		return pushNotificationMessage;
+
+	}
+
+	public void pushToTheClient(PushNotificationMessage pushNotificationMessage) {
+		logger.info("notification will be sent is " + pushNotificationMessage);
+
+		if (pushNotificationMessage != null) {
+
+			System.out.println("well message will be sent is " + pushNotificationMessage);
+			
+			
+			if(pushNotificationMessage.isAndroid())
+			{
+				
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.APPLICATION_JSON);
+				headers.add("Authorization", diamodoConfigurations.FIREBASE_AUTHURIZATION);
+				
+				AndroidPushNotificationMessage androidPushNotificationMessage = new AndroidPushNotificationMessage();
+				
+				androidPushNotificationMessage.to = pushNotificationMessage.getToken();
+				androidPushNotificationMessage.data = new Data( pushNotificationMessage.getMsg(),pushNotificationMessage.getPayload());
+
+				
+				
+				HttpEntity<String> request = new HttpEntity<String>(
+					new Gson().toJson(androidPushNotificationMessage)	, headers);
+				System.out.println(request);
+				ListenableFuture<ResponseEntity<String>> returned = asyncRestTemplate.postForEntity(
+						diamodoConfigurations.FIREBASE_URL, request, String.class);
   
+				returned.addCallback(new ListenableFutureCallback() {
+ 
+					@Override
+					public void onSuccess(Object result) {
+						logger.info("push notification has been sent successfully");
 
-    Payload payload =
-        Payload.prepareFriendshipRequestRecievedPayload(friendshipRequestSender.getId());
+					}
 
-    PushNotificationMessage pushNotificationMessage =
-        preparePushNotificationMessage(userWithDeviceInfo, message, payload);
-    pushToTheClient(pushNotificationMessage);
-  }
+					@Override
+					public void onFailure(Throwable ex) {
+						ex.printStackTrace();
+						logger.info("push notification has been not sent successfully");
 
+					}
 
+				});
+				
+			}else{
+				
+				
+				HttpEntity<PushNotificationMessage> request = new HttpEntity<PushNotificationMessage>(
+						pushNotificationMessage, getDefaultPushNotificationHeaders());
 
-  public PushNotificationMessage preparePushNotificationMessage(
-      UserWithDeviceInfo userWithDeviceInfo, String message, Payload payload) {
+				ListenableFuture<ResponseEntity<Object>> returned = asyncRestTemplate.postForEntity(
+						diamodoConfigurations.PUSH_NOTIFICATION_MESSAGE_TO_SPECIFIC_DEVICE_API_URL, request, null);
 
-    PushNotificationMessage pushNotificationMessage = null;
-    if (userWithDeviceInfo.getClientDevice().isAndroidDevice()) {
+				returned.addCallback(new ListenableFutureCallback() {
 
-      logger.info("reciever has android device");
-      pushNotificationMessage =
-          PushNotificationMessage.prepareAndroidPushNotification(userWithDeviceInfo
-              .getClientDevice().getDeviceToken(), message);
+					@Override
+					public void onSuccess(Object result) {
+						logger.info("push notification has been sent successfully");
 
-    } else if (userWithDeviceInfo.getClientDevice().isIOSDevice()) {
-      logger.info("reciever has ios device");
-      pushNotificationMessage =
-          PushNotificationMessage.prepareIOSPushNotification(userWithDeviceInfo.getClientDevice()
-              .getDeviceToken(), message);
-    }
-    pushNotificationMessage.setPayload(payload);
-    return pushNotificationMessage;
+					}
 
-  }
-   
+					@Override
+					public void onFailure(Throwable ex) {
+						ex.printStackTrace();
+						logger.info("push notification has been not sent successfully");
 
-  private void pushToTheClient(PushNotificationMessage pushNotificationMessage) {
-    logger.info("notification will be sent is " + pushNotificationMessage);
+					}
 
-    if (pushNotificationMessage != null) {
+				});
+			}
 
-      System.out.println("well message will be sent is " + pushNotificationMessage);
+			
 
-      HttpEntity<PushNotificationMessage> request =
-          new HttpEntity<PushNotificationMessage>(pushNotificationMessage,
-              getDefaultPushNotificationHeaders());
+		}
 
-      ListenableFuture<ResponseEntity<Object>> returned =
-          asyncRestTemplate.postForEntity(
-              diamodoConfigurations.PUSH_NOTIFICATION_MESSAGE_TO_SPECIFIC_DEVICE_API_URL, request,
-              null);
+	}
 
+	private HttpHeaders getDefaultPushNotificationHeaders() {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
 
-      returned.addCallback(new ListenableFutureCallback() {
+		headers.add("X-PUSHBOTS-APPID", diamodoConfigurations.X_PUSHBOTS_APPID);
+		headers.add("X-PUSHBOTS-SECRET", diamodoConfigurations.X_PUSHBOTS_SECRET);
+		return headers;
+	}
 
-        @Override
-        public void onSuccess(Object result) {
-          logger.info("push notification has been sent successfully");
+	public void pushOfflineMessageNotification(UserWithDeviceInfo userWithDeviceInfo, ClientInfo senderDTO,
+			LightConversation conversation, InboundSocketChatMessage inboundSocketChatMessage) {
+		String message = getApproperateConversationMessage(userWithDeviceInfo, senderDTO, conversation,
+				inboundSocketChatMessage);
 
+		Payload payload = Payload.prepareConversationMessagePayload( conversation,inboundSocketChatMessage );
+
+		PushNotificationMessage pushNotification = preparePushNotificationMessage(userWithDeviceInfo, message, payload);
+
+		pushToTheClient(pushNotification);
+
+	}
+
+	private String getApproperateConversationMessage(UserWithDeviceInfo userWithDeviceInfo, ClientInfo senderDTO,
+			LightConversation conversation, InboundSocketChatMessage inboundSocketChatMessage) {
+		String message = "";
+		if (conversation.isGroupChat()) {
+
+			if (inboundSocketChatMessage.isChatMessage()) {
+				message = diamodoTemplateBean.prepareGroupChatMessage(senderDTO, conversation.getConversationName(),
+						inboundSocketChatMessage.getMessageContent());
+			} else if (inboundSocketChatMessage.isBuzz()) {
+				message = diamodoTemplateBean.prepareGroupBuzzMessage(senderDTO, conversation.getConversationName());
+			} else if (inboundSocketChatMessage.isImageMessage()) {
+				message = diamodoTemplateBean.prepareGroupChatImageMessage(senderDTO,
+						conversation.getConversationName());
+			}
+
+		} else {
+
+			if (inboundSocketChatMessage.isChatMessage()) {
+				message = diamodoTemplateBean.preparePeerToPeerChatMessage(senderDTO,
+						inboundSocketChatMessage.getMessageContent());
+			} else if (inboundSocketChatMessage.isBuzz()) {
+				message = diamodoTemplateBean.preparePeerToPeerBuzzMessage(senderDTO);
+			} else if (inboundSocketChatMessage.isImageMessage()) {
+				message = diamodoTemplateBean.preparePeerToPeerImageMessage(senderDTO);
+			}
+
+		}
+		return message;
+	}
+
+	public void pushNotificationForConversationAdding(ClientInfo invitor, UserWithDeviceInfo userWithDeviceInfo,
+			String conversationId, String conversationName) {
+		String message = diamodoTemplateBean.prepareAddToConversationMessage(invitor, conversationName);
+		Payload payload = Payload.prepareConversationMessagePayload(conversationId);
+		PushNotificationMessage pushNotification = preparePushNotificationMessage(userWithDeviceInfo, message, payload);
+
+		pushToTheClient(pushNotification);
+
+	}
+	
+	class AndroidPushNotificationMessage
+	{
+		private String to;
+		private Data data;
+		
+	}
+	
+	class Data
+	{
+	  
+    	     public Data() {
+          super();
         }
-
-        @Override
-        public void onFailure(Throwable ex) {
-          ex.printStackTrace();
-          logger.info("push notification has been not sent successfully");
-
-        }
-
-      });
-
+      public Data(String msg, Object payload) {
+      super();
+      this.msg = msg;
+      this.payload = payload;
     }
-
-  }
-
-  private HttpHeaders getDefaultPushNotificationHeaders() {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-
-    headers.add("X-PUSHBOTS-APPID", diamodoConfigurations.X_PUSHBOTS_APPID);
-    headers.add("X-PUSHBOTS-SECRET", diamodoConfigurations.X_PUSHBOTS_SECRET);
-    return headers;
-  }
-
-  public void pushOfflineMessageNotification(UserWithDeviceInfo userWithDeviceInfo,
-      ClientInfo senderDTO, LightConversation conversation,
-      InboundSocketChatMessage inboundSocketChatMessage) {
-    String message =
-        getApproperateConversationMessage(userWithDeviceInfo, senderDTO, conversation,
-            inboundSocketChatMessage);
-
-    Payload payload = Payload.prepareConversationMessagePayload(conversation.getConversationId());
-
-    PushNotificationMessage pushNotification =
-        preparePushNotificationMessage(userWithDeviceInfo, message, payload);
-
-    pushToTheClient(pushNotification);
-
-
-
-  }
-
-  private String getApproperateConversationMessage(UserWithDeviceInfo userWithDeviceInfo,
-      ClientInfo senderDTO, LightConversation conversation,
-      InboundSocketChatMessage inboundSocketChatMessage) {
-    String message = "";
-    if (conversation.isGroupChat()) {
-
-      if (inboundSocketChatMessage.isChatMessage()) {
-        message =
-            diamodoTemplateBean.prepareGroupChatMessage(senderDTO,
-                conversation.getConversationName(), inboundSocketChatMessage.getMessageContent());
-      } else if (inboundSocketChatMessage.isBuzz()) {
-        message =
-            diamodoTemplateBean.prepareGroupBuzzMessage(senderDTO,
-                conversation.getConversationName());
-      } else if (inboundSocketChatMessage.isImageMessage()) {
-        message =
-            diamodoTemplateBean.prepareGroupChatImageMessage(senderDTO,
-                conversation.getConversationName());
-      }
-
-
-
-    } else {
-
-
-      if (inboundSocketChatMessage.isChatMessage()) {
-        message =
-            diamodoTemplateBean.preparePeerToPeerChatMessage(senderDTO,
-                inboundSocketChatMessage.getMessageContent());
-      } else if (inboundSocketChatMessage.isBuzz()) {
-        message = diamodoTemplateBean.preparePeerToPeerBuzzMessage(senderDTO);
-      } else if (inboundSocketChatMessage.isImageMessage()) {
-        message = diamodoTemplateBean.preparePeerToPeerImageMessage(senderDTO);
-      }
-
-    }
-    return message;
-  }
+      private String msg;
+	     private Object payload;
+	}
 }

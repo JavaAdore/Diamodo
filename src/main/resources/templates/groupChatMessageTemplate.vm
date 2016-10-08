@@ -1,2 +1,2 @@
-${firstName} ${lastName} sent message to ${conversationName}
+${firstName} ${lastName} sent a message to ${conversationName}
 ${messageContent}

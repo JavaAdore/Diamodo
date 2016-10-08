@@ -3,8 +3,11 @@ package com.queue.diamodo.business.serviceimpl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
 import com.queue.diamodo.business.exception.DiamodoCheckedException;
@@ -12,6 +15,7 @@ import com.queue.diamodo.business.service.FriendshipService;
 import com.queue.diamodo.common.config.DiamodoConfigurations;
 import com.queue.diamodo.common.document.DiamodoClient;
 import com.queue.diamodo.common.document.Friendship;
+import com.queue.diamodo.common.document.FriendshipHistory;
 import com.queue.diamodo.common.internationalization.DiamodoResourceBundleUtils;
 import com.queue.diamodo.common.utils.Utils;
 import com.queue.diamodo.dataaccess.dao.DiamodoClientDAO;
@@ -21,12 +25,11 @@ import com.queue.diamodo.dataaccess.dto.FriendRepresentationDTO;
 import com.queue.diamodo.dataaccess.dto.FriendSearchResult;
 import com.queue.diamodo.dataaccess.dto.FriendsSearchCriteriaDTO;
 import com.queue.diamodo.dataaccess.dto.PagingDTO;
-import com.queue.diamodo.web.webservice.websocket.DiamodoEndPoint;
 
 @Service
 public class FriendshipServiceImpl extends CommonService implements FriendshipService {
 
-
+  Logger LOGGER = LogManager.getLogger(FriendshipServiceImpl.class);
 
   @Autowired
   private FriendshipDAO friendshipDAO;
@@ -40,6 +43,9 @@ public class FriendshipServiceImpl extends CommonService implements FriendshipSe
 
   @Autowired
   private ModelMapper modelMapper;
+
+  @Autowired
+  private TaskExecutor taskExecutor;
 
   @Override
   public List<FriendSearchResult> findFriends(String searcherId,
@@ -58,14 +64,11 @@ public class FriendshipServiceImpl extends CommonService implements FriendshipSe
     List<FriendSearchResult> searchingResult = null;
 
     if (Utils.isEmail(friendsSearchCriteriaDTO.getSearchInput())) {
-      searchingResult =
-          friendshipDAO.findFriendsByEmail(searcherId, friendsSearchCriteriaDTO.getSearchInput(),
-              numberOfResultToSkip, numberOfResultNeeded);
+      searchingResult = friendshipDAO.findFriendsByEmail(searcherId,
+          friendsSearchCriteriaDTO.getSearchInput(), numberOfResultToSkip, numberOfResultNeeded);
     } else {
-      searchingResult =
-          friendshipDAO
-              .findFriendsByUserName(searcherId, friendsSearchCriteriaDTO.getSearchInput(),
-                  numberOfResultToSkip, numberOfResultNeeded);
+      searchingResult = friendshipDAO.findFriendsByUserName(searcherId,
+          friendsSearchCriteriaDTO.getSearchInput(), numberOfResultToSkip, numberOfResultNeeded);
     }
 
 
@@ -146,14 +149,14 @@ public class FriendshipServiceImpl extends CommonService implements FriendshipSe
   }
 
   private void resendFriendShip(String clientId, String friendId, Friendship friendship) {
-    
-    friendshipDAO.updateFriendshipSender(clientId , friendship.getId());
-   
+
+    friendshipDAO.updateFriendshipSender(clientId, friendship.getId());
+
     friendshipDAO.updatePartOneFriendshipStatus(clientId, friendship.getId(),
         Friendship.FRIEND_SHIP_STATUS_SENT);
-    
-    
-    friendshipDAO.updateFriendshipReciever(friendId , friendship.getId());
+
+
+    friendshipDAO.updateFriendshipReciever(friendId, friendship.getId());
 
     friendshipDAO.updatePartTwoFriendshipStatus(friendId, friendship.getId(),
         Friendship.FRIEND_SHIP_STATUS_RECIEVED);
@@ -176,9 +179,10 @@ public class FriendshipServiceImpl extends CommonService implements FriendshipSe
         throwDiamodException(
             DiamodoResourceBundleUtils.FRIEND_HAS_SENT_YOU_FRIENDSHIP_REQUEST_YOU_CAN_ACCEPT_IT_CODE,
             DiamodoResourceBundleUtils.FRIEND_HAS_SENT_YOU_FRIENDSHIP_REQUEST_YOU_CAN_ACCEPT_IT_KEY);
-      }else if(friendship.getPartOneFrienshipStatus() == Friendship.FRIEND_SHIP_STATUS_ALREADY_FRIEND)
-      {        
-        throwDiamodException(DiamodoResourceBundleUtils.YOU_ARE_ALREADY_FRIENDS_CODE, DiamodoResourceBundleUtils.YOU_ARE_ALREADY_FRIENDS_KEY);
+      } else if (friendship
+          .getPartOneFrienshipStatus() == Friendship.FRIEND_SHIP_STATUS_ALREADY_FRIEND) {
+        throwDiamodException(DiamodoResourceBundleUtils.YOU_ARE_ALREADY_FRIENDS_CODE,
+            DiamodoResourceBundleUtils.YOU_ARE_ALREADY_FRIENDS_KEY);
       }
     }
     return friendship;
@@ -256,8 +260,8 @@ public class FriendshipServiceImpl extends CommonService implements FriendshipSe
 
     // validateAcceptingRequestBlockingStatus(clientId, friendship.getFriendId());
 
-    friendshipDAO
-        .updateFriendshipStatus(friendshipId, Friendship.FRIEND_SHIP_STATUS_ALREADY_FRIEND);
+    friendshipDAO.updateFriendshipStatus(friendshipId,
+        Friendship.FRIEND_SHIP_STATUS_ALREADY_FRIEND);
 
     return null;
 
@@ -314,8 +318,8 @@ public class FriendshipServiceImpl extends CommonService implements FriendshipSe
 
     // friendshipDAO.deleteFriendShip(clientId, friendshipId);
 
-//    friendshipDAO.updateFriendshipStatus(clientId, friendship.getId(),
-//        Friendship.FRIEND_SHIP_STATUS_HAS_BEEN_REJECTED);
+    // friendshipDAO.updateFriendshipStatus(clientId, friendship.getId(),
+    // Friendship.FRIEND_SHIP_STATUS_HAS_BEEN_REJECTED);
 
     // friendshipDAO.deleteFriendShip(friendship.getFriendId(), friendshipId);
 
@@ -331,9 +335,8 @@ public class FriendshipServiceImpl extends CommonService implements FriendshipSe
 
     validateClientExistance(clientId);
 
-    List<Friendship> friendships =
-        friendshipDAO.getMyFriends(clientId, pagingDTO.getNumberOfResultNeeded(),
-            pagingDTO.getNumberOfResultsToSkip());
+    List<Friendship> friendships = friendshipDAO.getMyFriends(clientId,
+        pagingDTO.getNumberOfResultNeeded(), pagingDTO.getNumberOfResultsToSkip());
     List<FriendRepresentationDTO> result = new ArrayList();
     DiamodoClient me = new DiamodoClient(clientId);
     friendships.forEach(f -> {
@@ -347,8 +350,8 @@ public class FriendshipServiceImpl extends CommonService implements FriendshipSe
       }
 
       if (diamodoClient != null) {
-        result.add(new FriendRepresentationDTO(f.getId(), modelMapper.map(diamodoClient,
-            ClientInfo.class)));
+        result.add(new FriendRepresentationDTO(f.getId(),
+            modelMapper.map(diamodoClient, ClientInfo.class)));
       }
 
 
@@ -363,14 +366,13 @@ public class FriendshipServiceImpl extends CommonService implements FriendshipSe
 
     validateClientExistance(clientId);
 
-    List<Friendship> friendships =
-        friendshipDAO.getMyFriendshipRequests(clientId, pagingDTO.getNumberOfResultNeeded(),
-            pagingDTO.getNumberOfResultsToSkip());
+    List<Friendship> friendships = friendshipDAO.getMyFriendshipRequests(clientId,
+        pagingDTO.getNumberOfResultNeeded(), pagingDTO.getNumberOfResultsToSkip());
 
     List<FriendRepresentationDTO> result = new ArrayList();
     friendships.forEach(f -> {
-      result.add(new FriendRepresentationDTO(f.getId(), modelMapper.map(f.getPartOne(),
-          ClientInfo.class)));
+      result.add(new FriendRepresentationDTO(f.getId(),
+          modelMapper.map(f.getPartOne(), ClientInfo.class)));
 
     });
     return result;
@@ -394,6 +396,116 @@ public class FriendshipServiceImpl extends CommonService implements FriendshipSe
   @Override
   public Friendship getfriendshipById(String destinationId) {
     return friendshipDAO.getfriendshipById(destinationId);
+  }
+
+  @Override
+  public String deleteFriendship(String clientId, String friendshipId)
+      throws DiamodoCheckedException {
+
+    validateClientExistance(clientId);
+
+    Friendship friendship = friendshipDAO.getfriendshipById(friendshipId);
+
+    validateFriendShipExsistance(friendship);
+
+    validateMemberFriendshipExsistance(clientId, friendship);
+
+    validateFriendshipStatus(friendship);
+
+    markFriendshipAsDeleted(clientId, friendshipId);
+
+    addFriendshipDeletedByToHistory(clientId, friendshipId);
+
+    String otherPartId = getOtherPartId(clientId, friendship);
+
+    return otherPartId;
+
+  }
+
+
+
+  private void validateFriendshipStatus(Friendship friendship) throws DiamodoCheckedException {
+
+    if (friendship.getPartOneFrienshipStatus() == Friendship.FRIEND_SHIP_STATUS_HAS_BEEN_DELETED) {
+      throwDiamodException(DiamodoResourceBundleUtils.FRIENDSHIP_ALREADY_DELETED_CODE,
+          DiamodoResourceBundleUtils.FRIENDSHIP_ALREADY_DELETED_KEY);
+    }
+  }
+
+  private String getOtherPartId(String clientId, Friendship friendship) {
+
+    DiamodoClient diamodoClient = new DiamodoClient(clientId);
+    if (friendship.getPartOne().equals(diamodoClient)) {
+      return friendship.getPartTwo().getId();
+    } else {
+      return friendship.getPartOne().getId();
+    }
+  }
+
+  private void validateFriendShipExsistance(Friendship friendship) throws DiamodoCheckedException {
+    if (Utils.isEmpty(friendship)) {
+
+      throwDiamodException(DiamodoResourceBundleUtils.FRIENDSHIP_DOESNT_EXSIST_CODE,
+          DiamodoResourceBundleUtils.FRIENDSHIP_DOESNT_EXIST_KEY);
+    }
+  }
+
+  private void addFriendshipDeletedByToHistory(String clientId, String friendshipId) {
+    taskExecutor.execute(new Runnable() {
+
+      @Override
+      public void run() {
+
+        FriendshipHistory friendshipHistory = new FriendshipHistory();
+        friendshipHistory.setDiamodoClient(new DiamodoClient(clientId));
+        friendshipHistory
+            .setAction(String.format("client has deleted friendship %s", friendshipId));
+
+        friendshipDAO.addFriendshipHistory(friendshipId, friendshipHistory);
+      }
+
+    });
+
+  }
+
+  private void markFriendshipAsDeleted(String clientId, String friendshipId) {
+
+    friendshipDAO.updateFriendshipStatus(friendshipId,
+        Friendship.FRIEND_SHIP_STATUS_HAS_BEEN_DELETED);
+
+  }
+
+  private void validateMemberFriendshipExsistance(String clientId, Friendship friendship)
+      throws DiamodoCheckedException {
+
+
+    boolean isClientMemberOfFriendship = isClientMemberOfFriendship(clientId, friendship);
+
+    if (!isClientMemberOfFriendship) {
+      throwDiamodException(DiamodoResourceBundleUtils.YOU_ARE_NOT_PART_OF_FRIENDSHIP_CODE,
+          DiamodoResourceBundleUtils.YOU_ARE_NOT_PART_OF_FRIENDSHIP_KEY);
+    }
+
+  }
+
+  private boolean isClientMemberOfFriendship(String clientId, Friendship friendship) {
+
+    DiamodoClient diamodoClient = new DiamodoClient(clientId);
+    boolean isMemberPartOneInFriendship = friendship.getPartOne().equals(diamodoClient);
+    LOGGER.debug(String.format("client %s is %s member one of friendship", clientId,
+        isMemberPartOneInFriendship ? "" : " not "));
+    if (isMemberPartOneInFriendship) {
+      return true;
+    }
+
+    boolean isMemberPartTwoInFriendship = friendship.getPartTwo().equals(diamodoClient);
+    LOGGER.debug(String.format("client %s is %s member two of friendship", clientId,
+        isMemberPartTwoInFriendship ? "" : " not "));
+    if (isMemberPartTwoInFriendship) {
+      return true;
+    }
+
+    return false;
   }
 
 

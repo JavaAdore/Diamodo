@@ -41,6 +41,10 @@ public interface ChatMessageService {
 
   void markConversationAsSeen(String clientId, String conversationId);
 
+String getConversationName(String conversationId);
+
+void updateChatMessages();
+
 
 
 }

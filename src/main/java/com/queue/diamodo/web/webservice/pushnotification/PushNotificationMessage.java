@@ -17,8 +17,19 @@ public class PushNotificationMessage implements Serializable {
 
   private String deviceToken;
 
+  private Integer setbadgecount =1 ;
 
-  private String msg;
+
+
+public Integer getSetbadgecount() {
+	return setbadgecount;
+}
+
+public void setSetbadgecount(Integer setbadgecount) {
+	this.setbadgecount = setbadgecount;
+}
+
+private String msg;
 
 
   private String sound = "default";
@@ -126,6 +137,9 @@ public class PushNotificationMessage implements Serializable {
         + ", msg=" + msg + ", sound=" + sound + ", payload=" + payload + "]";
   }
 
-
-
+  public boolean isAndroid()
+  {
+	  return platform == ANDROID_PUSH_NOTIFICATION;
+  }
+  
 }

@@ -3,7 +3,7 @@
 function initiateSocketConnection() {
 	
 	 var wsUri =
-		 "ws://localhost:8080/Diamodo/userChatSocket/" +get('clientId')+  "/"+get('userToken');
+		 "ws://localhost:8080/diamodo-0.0.1-SNAPSHOT/userChatSocket/" +get('clientId')+  "/"+get('userToken');
 
 	 
 	websocket = new WebSocket(wsUri);

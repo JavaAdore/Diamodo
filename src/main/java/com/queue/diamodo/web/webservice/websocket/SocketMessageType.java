@@ -11,5 +11,7 @@ public interface SocketMessageType {
   public final static int GET_UNSEEN_MESSAGES_RESPONSE = 4;
 
 
+  public final static int RECIEVE_FRIENDSHIP_DELETATION_MESSAGE = 5;
+
 
 }

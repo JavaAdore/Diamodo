@@ -1,1 +1,1 @@
-${firstName} ${lastName} Buzzed on ${conversationName}
+${firstName} ${lastName} Pinged on ${conversationName}

@@ -12,6 +12,7 @@ public class DiamodoResourceBundleUtils {
 			.getLogger(DiamodoResourceBundleUtils.class);
 
 	public static final String FRIEND_REQUEST_SENT_SUCCESSFULLY_MESSAGE = "FRIEND_REQUEST_SENT_SUCCESSFULLY_MESSAGE";
+    public static final String FRIEND_HAS_BEEN_REMOVED = "FRIEND_HAS_BEEN_REMOVED";
 
 	public static final String NO_RESULT_FOUND_MESSAGE = "NO_RESULT_FOUND_MESSAGE";
 
@@ -139,8 +140,17 @@ public class DiamodoResourceBundleUtils {
 	public static final int INVALID_USER_TOKEN_CODE = -38;
 	public static final String INVALID_USER_TOKEN_KEY = "INVALID_USER_TOKEN_KEY";
 	
+	public static final int FRIENDSHIP_DOESNT_EXSIST_CODE= -39;
+    public static final String FRIENDSHIP_DOESNT_EXIST_KEY = "FRIENDSHIP_DOESNT_EXIST_KEY";
 	
-	
+    
+    public static final int YOU_ARE_NOT_PART_OF_FRIENDSHIP_CODE= -40;
+    public static final String YOU_ARE_NOT_PART_OF_FRIENDSHIP_KEY = "YOU_ARE_NOT_PART_OF_FRIENDSHIP_KEY";
+    
+    public static final int FRIENDSHIP_ALREADY_DELETED_CODE= -41;
+    public static final String FRIENDSHIP_ALREADY_DELETED_KEY = "FRIENDSHIP_ALREADY_DELETED_KEY";
+	   
+  
 
 	public static String getValue(String key, Locale locale) {
 		ResourceBundle resourceBundle = null;

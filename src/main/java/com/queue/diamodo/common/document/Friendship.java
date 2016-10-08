@@ -2,6 +2,7 @@ package com.queue.diamodo.common.document;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -21,6 +22,8 @@ public class Friendship implements Serializable {
   public final static int FRIEND_SHIP_STATUS_ALREADY_FRIEND = 3;
   public final static int FRIEND_SHIP_STATUS_NOT_FRIEND_YET = 4;
   public final static int FRIEND_SHIP_STATUS_HAS_BEEN_REJECTED = 5;
+  public final static int FRIEND_SHIP_STATUS_HAS_BEEN_DELETED = 6;
+
 
   private static final long serialVersionUID = 1L;
 
@@ -53,7 +56,11 @@ public class Friendship implements Serializable {
 
   private boolean seen;
 
+  @JsonIgnore
+  private List<FriendshipHistory> friendshipHistory;
+   
 
+  
 
   @Override
   public int hashCode() {
@@ -155,5 +162,11 @@ public class Friendship implements Serializable {
     this.partTwoFrienshipStatus = partTwoFrienshipStatus;
   }
 
+  public List<FriendshipHistory> getFriendshipHistory() {
+    return friendshipHistory;
+  }
 
+  public void setFriendshipHistory(List<FriendshipHistory> friendshipHistory) {
+    this.friendshipHistory = friendshipHistory;
+  }
 }

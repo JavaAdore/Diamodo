@@ -29,6 +29,7 @@ import com.queue.diamodo.common.document.ChatMessage;
 import com.queue.diamodo.common.document.Conversation;
 import com.queue.diamodo.common.document.DiamodoClient;
 import com.queue.diamodo.common.document.SeenByDTO;
+import com.queue.diamodo.common.utils.Utils;
 import com.queue.diamodo.dataaccess.dao.ChatMessageDAO;
 import com.queue.diamodo.dataaccess.dto.GetMyConversationsResponseDTO;
 import com.queue.diamodo.dataaccess.dto.PagingDTO;
@@ -37,180 +38,189 @@ import com.queue.diamodo.web.webservice.websocket.OutboundChatSocketMessage;
 @Repository
 public class ChatMessageDAOImpl implements ChatMessageDAO {
 
+	@Autowired
+	MongoOperations mongoOperations;
 
-  @Autowired
-  MongoOperations mongoOperations;
+	@Override
+	public void pushToConversation(String conversationId, ChatMessage chatMessage) {
 
-  @Override
-  public void pushToConversation(String conversationId, ChatMessage chatMessage) {
+		// Criteria criteria = new Criteria();
+		// criteria.andOperator( .is(new ObjectId(sender))
+		// ,Criteria.where("memberConversations.$.id").is(new
+		// ObjectId(conversationId)) );
+		Query query = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
 
-    // Criteria criteria = new Criteria();
-    // criteria.andOperator( .is(new ObjectId(sender))
-    // ,Criteria.where("memberConversations.$.id").is(new ObjectId(conversationId)) );
-    Query query = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
+		List<BasicDBObject> list = mongoOperations.find(query, BasicDBObject.class, "conversation");
 
-    List<BasicDBObject> list = mongoOperations.find(query, BasicDBObject.class, "conversation");
+		System.out.println("well list size is " + list.size());
 
-    System.out.println("well list size is " + list.size());
+		Update update = new Update();
+		update.addToSet("chatMessages", chatMessage);
 
-    Update update = new Update();
-    update.addToSet("chatMessages", chatMessage);
+		mongoOperations.updateFirst(query, update, Conversation.class);
 
-    mongoOperations.updateFirst(query, update, Conversation.class);
+	}
 
+	@Override
+	public boolean isConversationExist(String member, String conversationId) {
 
-  }
+		Query query = new Query(Criteria.where("_id").is(new ObjectId(member)).and("memberConversations")
+				.is(new DBRef("conversation", new ObjectId(conversationId))));
 
-  @Override
-  public boolean isConversationExist(String member, String conversationId) {
+		DiamodoClient diamodoClient = mongoOperations.findOne(query, DiamodoClient.class);
 
+		return diamodoClient != null;
 
-    Query query =
-        new Query(Criteria.where("_id").is(new ObjectId(member)).and("memberConversations")
-            .is(new DBRef("conversation", new ObjectId(conversationId))));
+	}
 
-    DiamodoClient diamodoClient = mongoOperations.findOne(query, DiamodoClient.class);
+	@Override
+	public void pushConversationToClient(String client, String conversationId) {
+		Query query = new Query(Criteria.where("_id").is(new ObjectId(client)));
 
-    return diamodoClient != null;
+		Update update = new Update();
+		update.addToSet("memberConversations", new DBRef("conversation", new ObjectId(conversationId)));
 
-  }
+		mongoOperations.updateFirst(query, update, DiamodoClient.class);
+	}
 
-  @Override
-  public void pushConversationToClient(String client, String conversationId) {
-    Query query = new Query(Criteria.where("_id").is(new ObjectId(client)));
+	@Override
+	public List<OutboundChatSocketMessage> getUnseenMessages(String clientId, String conversationId) {
+		Aggregation aggregation = newAggregation(DiamodoClient.class,
+				match(where("_id").is(new ObjectId(conversationId))), unwind("chatMessages"),
+				match(where("chatMessages.seenBy.diamodoClient")
+						.nin((new DBRef("diamodoClient", new ObjectId(clientId))))),
+				sort(Direction.DESC, "chatMessages.date"),
 
-    Update update = new Update();
-    update.addToSet("memberConversations", new DBRef("conversation", new ObjectId(conversationId)));
+				new GroupOperation(Fields.fields("chatMessages"))
 
+		);
 
-    mongoOperations.updateFirst(query, update, DiamodoClient.class);
-  }
+		AggregationResults<OutboundChatSocketMessage> result = mongoOperations.aggregate(aggregation,
+				Conversation.class, OutboundChatSocketMessage.class);
 
-  @Override
-  public List<OutboundChatSocketMessage> getUnseenMessages(String clientId, String conversationId) {
-    Aggregation aggregation =
-        newAggregation(
-            DiamodoClient.class,
-            match(where("_id").is(new ObjectId(conversationId))),
-            unwind("chatMessages"),
-            match(where("chatMessages.seenBy.diamodoClient").nin(
-                (new DBRef("diamodoClient", new ObjectId(clientId))))),
-            sort(Direction.DESC, "chatMessages.date"),
+		return result.getMappedResults();
+	}
 
-            new GroupOperation(Fields.fields("chatMessages"))
+	// should be update statement ...but just simple work around to make it
+	// later
+	@Override
+	public void markConversationAsSeen(String clientId, String conversationId) {
 
-        );
+		Conversation conversation = mongoOperations.findById(conversationId, Conversation.class);
+		if (conversation != null) {
+			final DiamodoClient diamodoClient = new DiamodoClient(clientId);
+			conversation.getChatMessages().forEach(m -> {
+				m.getSeenBy().add(new SeenByDTO(diamodoClient));
+			});
 
+			mongoOperations.save(conversation);
 
-    AggregationResults<OutboundChatSocketMessage> result =
-        mongoOperations.aggregate(aggregation, Conversation.class, OutboundChatSocketMessage.class);
+		}
 
-    return result.getMappedResults();
-  }
+	}
 
-  // should be update statement ...but just simple work around to make it later
-  @Override
-  public void markConversationAsSeen(String clientId, String conversationId) {
+	@Override
+	public Conversation getConversationById(String destinationId) {
 
-    Conversation conversation = mongoOperations.findById(conversationId, Conversation.class);
-    if (conversation != null) {
-      final DiamodoClient diamodoClient = new DiamodoClient(clientId);
-      conversation.getChatMessages().forEach(m -> {
-        m.getSeenBy().add(new SeenByDTO(diamodoClient));
-      });
+		Query query = new Query(Criteria.where("_id").is(new ObjectId(destinationId)));
 
-      mongoOperations.save(conversation);
+		Conversation conversation = mongoOperations.findOne(query, Conversation.class);
+		return conversation;
+	}
 
-    }
+	@Override
+	public Conversation saveConversation(Conversation conversation) {
+		mongoOperations.save(conversation);
+		return conversation;
 
-  }
+	}
 
-  @Override
-  public Conversation getConversationById(String destinationId) {
+	@Override
+	public void addNewAdministrators(String conversationId, Set<DiamodoClient> adminstrators) {
+		Query query = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
+		Update update = new Update();
+		adminstrators.forEach(a -> {
+			update.addToSet("conversationAdministrators", a);
+			mongoOperations.updateMulti(query, update, Conversation.class);
 
-    Query query = new Query(Criteria.where("_id").is(new ObjectId(destinationId)));
+		});
 
-    Conversation conversation = mongoOperations.findOne(query, Conversation.class);
-    return conversation;
-  }
+	}
 
-  @Override
-  public Conversation saveConversation(Conversation conversation) {
-    mongoOperations.save(conversation);
-    return conversation;
+	@Override
+	public List<DiamodoClient> getConversationMembers(String clientId, String conversationId) {
 
-  }
+		Conversation conversation = mongoOperations.findById(new ObjectId(conversationId), Conversation.class);
+		if (conversation != null) {
+			return new ArrayList<DiamodoClient>(conversation.getConversationMembers());
+		}
+		return new ArrayList<DiamodoClient>();
+	}
 
-  @Override
-  public void addNewAdministrators(String conversationId, Set<DiamodoClient> adminstrators) {
-    Query query = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
-    Update update = new Update();
-    adminstrators.forEach(a -> {
-      update.addToSet("conversationAdministrators", a);
-      mongoOperations.updateMulti(query, update, Conversation.class);
+	@Override
+	public void leaveConversation(String clientId, String conversationId) {
 
-    });
+		Query query = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
+		Update update = new Update();
+		DiamodoClient clientToBeRemoved = new DiamodoClient(clientId);
 
+		update.pull("conversationMembers", clientToBeRemoved);
+		update.pull("conversationAdministrators", clientToBeRemoved);
 
-  }
+		mongoOperations.updateMulti(query, update, Conversation.class);
 
-  @Override
-  public List<DiamodoClient> getConversationMembers(String clientId, String conversationId) {
+	}
 
+	@Override
+	public List<GetMyConversationsResponseDTO> getMyConversations(String clientId, PagingDTO pagingDTO) {
 
-    Conversation conversation =
-        mongoOperations.findById(new ObjectId(conversationId), Conversation.class);
-    if (conversation != null) {
-      return new ArrayList<DiamodoClient>(conversation.getConversationMembers());
-    }
-    return new ArrayList<DiamodoClient>();
-  }
+		Criteria criteria = Criteria.where("isGroupChat").is(true).and("conversationMembers")
+				.in(new DBRef("diamodoClient", new ObjectId(clientId)));
 
-  @Override
-  public void leaveConversation(String clientId, String conversationId) {
+		Query query = new Query(criteria);
+		query.skip(pagingDTO.getNumberOfResultsToSkip());
+		query.limit(pagingDTO.getNumberOfResultNeeded());
+		List<GetMyConversationsResponseDTO> result = mongoOperations.find(query, GetMyConversationsResponseDTO.class,
+				"conversation");
 
+		return result;
+	}
 
-    Query query = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
-    Update update = new Update();
-    DiamodoClient clientToBeRemoved = new DiamodoClient(clientId);
+	@Override
+	public void inviteMemberToConversation(String conversationId, Set<String> memberIds) {
 
-    update.pull("conversationMembers", clientToBeRemoved);
-    update.pull("conversationAdministrators", clientToBeRemoved);
+		Query query = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
+		Update update = new Update();
+		memberIds.forEach(a -> {
+			update.addToSet("conversationMembers", new DiamodoClient(a));
+			mongoOperations.updateMulti(query, update, Conversation.class);
 
-    mongoOperations.updateMulti(query, update, Conversation.class);
+		});
 
+	}
 
-  }
+	@Override
+	public String getConversationNameById(String conversationId) {
+		Query query = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
+		query.fields().include("conversationName");
+		Conversation conversation = mongoOperations.findOne(query, Conversation.class);
+		if (Utils.isNotEmpty(conversation)) {
+			return conversation.getConversationName();
+		}
+		return null;
+	}
 
-  @Override
-  public List<GetMyConversationsResponseDTO> getMyConversations(String clientId, PagingDTO pagingDTO) {
+	@Override
+	public List<Conversation> getAllConversations() {
+		return mongoOperations.findAll(Conversation.class);
+	}
 
-    Criteria criteria =
-        Criteria.where("isGroupChat").is(true).and("conversationMembers")
-            .in(new DBRef("diamodoClient", new ObjectId(clientId)));
-
-    Query query = new Query(criteria);
-    query.skip(pagingDTO.getNumberOfResultsToSkip());
-    query.limit(pagingDTO.getNumberOfResultNeeded());
-    List<GetMyConversationsResponseDTO> result =
-        mongoOperations.find(query, GetMyConversationsResponseDTO.class, "conversation");
-
-    return result;
-  }
-
-  @Override
-  public void inviteMemberToConversation(String conversationId, Set<String> memberIds) {
-
-    Query query = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
-    Update update = new Update();
-    memberIds.forEach(a -> {
-      update.addToSet("conversationMembers", new DiamodoClient(a));
-      mongoOperations.updateMulti(query, update, Conversation.class);
-
-    });
-
-  }
-
-
+	@Override
+	public Conversation getIsGroupConversation(String conversationId) {
+		Query query = new Query(Criteria.where("_id").is(new ObjectId(conversationId)));
+		query.fields().include("isGroupChat");
+		Conversation conversation = mongoOperations.findOne(query, Conversation.class);
+		return conversation;
+	}
 
 }

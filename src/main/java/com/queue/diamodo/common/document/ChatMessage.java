@@ -31,8 +31,19 @@ public class ChatMessage implements Serializable {
 
   private Date messageDate;
   
+  private boolean isGroupChat;
   
-  private String senderId;
+  public boolean isGroupChat() {
+	return isGroupChat;
+}
+
+
+public void setGroupChat(boolean isGroupChat) {
+	this.isGroupChat = isGroupChat;
+}
+
+
+private String senderId;
   
   private String destinationId;
   

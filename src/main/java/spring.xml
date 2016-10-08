@@ -62,10 +62,10 @@
 	</bean>
 
 	<mvc:interceptors>
-		<mvc:interceptor>
-			<mvc:mapping path="/friendshipController/*" />
-			<mvc:mapping path="conversationController/*" />
-			<mvc:mapping path="diamodoProfileController/*" />
+		<mvc:interceptor>  
+			<mvc:mapping path="/friendshipController/**" />
+			<mvc:mapping path="/conversationController/**" />
+			<mvc:mapping path="/diamodoProfileController/**" />
 
 			<bean class="com.queue.diamodo.web.security.UserAuthenticationInterceptor" />
 		</mvc:interceptor>

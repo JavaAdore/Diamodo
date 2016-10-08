@@ -1,8 +1,8 @@
 package com.queue.diamodo.dataaccess.dto;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class CreateConversationRequest implements Serializable{
 
@@ -21,7 +21,7 @@ public class CreateConversationRequest implements Serializable{
   
   private boolean isPublicConversation;
   
-  private List<String> memberIds = new ArrayList<String>();
+  private Set<String> memberIds = new HashSet<String>();
   
   
 
@@ -31,12 +31,12 @@ public class CreateConversationRequest implements Serializable{
  
 
 
-  public List<String> getMemberIds() {
+  public Set<String> getMemberIds() {
     return memberIds;
   }
 
 
-  public void setMemberIds(List<String> memberIds) {
+  public void setMemberIds(Set<String> memberIds) {
     this.memberIds = memberIds;
   }
 

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import com.queue.diamodo.common.document.ClientDevice;
 import com.queue.diamodo.common.document.DiamodoClient;
+import com.queue.diamodo.common.document.FriendshipHistory;
 import com.queue.diamodo.common.document.ProfileImage;
 import com.queue.diamodo.dataaccess.dto.ClientInfo;
 import com.queue.diamodo.dataaccess.dto.UserWithDeviceInfo;
@@ -46,5 +47,6 @@ public interface DiamodoClientDAO extends MongoRepository<DiamodoClient, String>
   public DiamodoClient getUserByIdAndUserToken(String clientId, String userToken);
 
   public UserWithDeviceInfo getClientWithDeviceInfo(String recieverId);
+
 
 }

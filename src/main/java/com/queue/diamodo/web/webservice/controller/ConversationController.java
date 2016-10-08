@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.queue.diamodo.business.exception.DiamodoCheckedException;
 import com.queue.diamodo.business.management.DiamodoManagement;
+import com.queue.diamodo.business.service.ChatMessageService;
 import com.queue.diamodo.common.config.DiamodoConfigurations;
 import com.queue.diamodo.dataaccess.dto.AssignNewAdminsDTO;
 import com.queue.diamodo.dataaccess.dto.ClientInfo;
@@ -38,162 +39,152 @@ import com.queue.diamodo.web.webservice.websocket.OutboundChatSocketMessage;
 @RequestMapping("/conversationController")
 public class ConversationController {
 
-  @Autowired
-  private DiamodoManagement diamodoManagement;
-  
-  @Autowired
-  private DiamodoConfigurations diamodoConfigurations;
+	@Autowired
+	private DiamodoManagement diamodoManagement;
 
+	@Autowired
+	private DiamodoConfigurations diamodoConfigurations;
+	// just temperary and to be removed
+	@Autowired
+	private ChatMessageService chatMessageService;
 
-  @RequestMapping(value = "/getUnseenMessages", produces = {"application/json"})
-  public Object getUnseenConversationMessages(
-      @RequestHeader(name = "clientId", required = true) String clientId, @RequestHeader(
-          name = "userToken", required = true) String userToken, @RequestParam(
-          name = "conversationId", required = true) String conversationId, Locale locale) {
+	@RequestMapping(value = "/getUnseenMessages", produces = { "application/json" })
+	public Object getUnseenConversationMessages(@RequestHeader(name = "clientId", required = true) String clientId,
+			@RequestHeader(name = "userToken", required = true) String userToken,
+			@RequestParam(name = "conversationId", required = true) String conversationId, Locale locale) {
 
-    List<OutboundChatSocketMessage> result =
-        diamodoManagement.getUnseenMessages(clientId, conversationId);
-    return result;
+		List<OutboundChatSocketMessage> result = diamodoManagement.getUnseenMessages(clientId, conversationId);
+		return result;
 
-  }
+	}
 
-  @RequestMapping(method = RequestMethod.POST, value = "/createNewConversation",
-      produces = {"application/json"})
-  public Object createNewConversation(
-      @RequestHeader(name = "clientId", required = true) String clientId, @RequestHeader(
-          name = "userToken", required = true) String userToken,
-      @RequestBody CreateConversationRequest createConversationRequest, Locale locale) {
+	@RequestMapping(method = RequestMethod.POST, value = "/createNewConversation", produces = { "application/json" })
+	public Object createNewConversation(@RequestHeader(name = "clientId", required = true) String clientId,
+			@RequestHeader(name = "userToken", required = true) String userToken,
+			@RequestBody CreateConversationRequest createConversationRequest, Locale locale) {
 
-    try {
-      CreateConversationResponse createConversationResponse =
-          diamodoManagement.createNewConversation(clientId, createConversationRequest);
-      return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(createConversationResponse));
+		try {
+			CreateConversationResponse createConversationResponse = diamodoManagement.createNewConversation(clientId,
+					createConversationRequest);
+			return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(createConversationResponse));
 
-    } catch (DiamodoCheckedException ex) {
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareFailureResponse(ex, locale));
-    } catch (Exception e) {
-      e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareBackendErrorResponse(locale));
-    }
+		} catch (DiamodoCheckedException ex) {
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareFailureResponse(ex, locale));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareBackendErrorResponse(locale));
+		}
 
-  }
+	}
 
+	@RequestMapping(method = RequestMethod.POST, value = "/assignNewAdmins", produces = { "application/json" })
+	public Object assignNewAdmin(@RequestHeader(name = "clientId", required = true) String clientId,
+			@RequestHeader(name = "userToken", required = true) String userToken,
+			@RequestBody AssignNewAdminsDTO assignNewAdminsDTO, Locale locale) {
 
+		try {
+			diamodoManagement.assignNewAdmin(clientId, assignNewAdminsDTO);
+			return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse(locale));
 
-  @RequestMapping(method = RequestMethod.POST, value = "/assignNewAdmins",
-      produces = {"application/json"})
-  public Object assignNewAdmin(@RequestHeader(name = "clientId", required = true) String clientId,
-      @RequestHeader(name = "userToken", required = true) String userToken,
-      @RequestBody AssignNewAdminsDTO assignNewAdminsDTO, Locale locale) {
+		} catch (DiamodoCheckedException ex) {
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareFailureResponse(ex, locale));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareBackendErrorResponse(locale));
+		}
+	}
 
-    try {
-      diamodoManagement.assignNewAdmin(clientId, assignNewAdminsDTO);
-      return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse(locale));
+	@RequestMapping(value = "/getConversationMembers", produces = { "application/json" })
+	public Object getConversationMembers(@RequestHeader(name = "clientId", required = true) String clientId,
+			@RequestHeader(name = "userToken", required = true) String userToken,
+			@RequestParam(name = "conversationId") String conversationId, Locale locale) {
 
-    } catch (DiamodoCheckedException ex) {
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareFailureResponse(ex, locale));
-    } catch (Exception e) {
-      e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareBackendErrorResponse(locale));
-    }
-  }
+		try {
+			List<ClientInfo> result = diamodoManagement.getConversationMembers(clientId, conversationId);
+			return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(result));
 
-  @RequestMapping(value = "/getConversationMembers", produces = {"application/json"})
-  public Object getConversationMembers(
-      @RequestHeader(name = "clientId", required = true) String clientId, @RequestHeader(
-          name = "userToken", required = true) String userToken, @RequestParam(
-          name = "conversationId") String conversationId, Locale locale) {
+		} catch (DiamodoCheckedException ex) {
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareFailureResponse(ex, locale));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareBackendErrorResponse(locale));
+		}
 
+	}
 
-    try {
-      List<ClientInfo> result = diamodoManagement.getConversationMembers(clientId, conversationId);
-      return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(result));
+	@RequestMapping(value = "/leaveConversation", produces = { "application/json" })
+	public Object leaveConversation(@RequestHeader(name = "clientId", required = true) String clientId,
+			@RequestHeader(name = "userToken", required = true) String userToken,
+			@RequestParam(name = "conversationId") String conversationId, Locale locale) {
+		try {
+			diamodoManagement.leaveConversation(clientId, conversationId);
+			DiamodoEndPoint.leaveConversation(clientId, conversationId);
+			return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse(locale));
 
-    } catch (DiamodoCheckedException ex) {
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareFailureResponse(ex, locale));
-    } catch (Exception e) {
-      e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareBackendErrorResponse(locale));
-    }
+		} catch (DiamodoCheckedException ex) {
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareFailureResponse(ex, locale));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareBackendErrorResponse(locale));
+		}
 
-  }
+	}
 
+	@RequestMapping(value = "/getMyConversations", produces = { "application/json" })
+	public Object getMyConversations(@RequestHeader(name = "clientId", required = true) String clientId,
+			@RequestHeader(name = "userToken", required = true) String userToken, @RequestBody PagingDTO pagingDTO,
+			Locale locale) {
+		try {
 
+			List<GetMyConversationsResponseDTO> result = diamodoManagement.getMyConversations(clientId, pagingDTO);
 
-  @RequestMapping(value = "/leaveConversation", produces = {"application/json"})
-  public Object leaveConversation(
-      @RequestHeader(name = "clientId", required = true) String clientId, @RequestHeader(
-          name = "userToken", required = true) String userToken, @RequestParam(
-          name = "conversationId") String conversationId, Locale locale) {
-    try {
-      diamodoManagement.leaveConversation(clientId, conversationId);
-      DiamodoEndPoint.leaveConversation(clientId, conversationId);
-      return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse(locale));
+			return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(result));
 
-    } catch (DiamodoCheckedException ex) {
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareFailureResponse(ex, locale));
-    } catch (Exception e) {
-      e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareBackendErrorResponse(locale));
-    }
+		} catch (DiamodoCheckedException ex) {
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareFailureResponse(ex, locale));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareBackendErrorResponse(locale));
+		}
 
-  }
+	}
 
+	@RequestMapping(method = RequestMethod.POST, value = "/inviteMembersToConversation", produces = {
+			"application/json" })
+	public Object inviteNewMembers(@RequestHeader(name = "clientId", required = true) String clientId,
+			@RequestHeader(name = "userToken", required = true) String userToken,
+			@RequestBody InviteMembersToConversationRequest inviteMembersToConversationRequest, Locale locale) {
 
-  @RequestMapping(value = "/getMyConversations", produces = {"application/json"})
-  public Object getMyConversations(
-      @RequestHeader(name = "clientId", required = true) String clientId, @RequestHeader(
-          name = "userToken", required = true) String userToken, @RequestBody PagingDTO pagingDTO,
-      Locale locale) {
-    try {
+		try {
+			diamodoManagement.inviteMemberToConversation(clientId, inviteMembersToConversationRequest);
+			return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse(locale));
 
-      List<GetMyConversationsResponseDTO> result =
-          diamodoManagement.getMyConversations(clientId, pagingDTO);
+		} catch (DiamodoCheckedException ex) {
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareFailureResponse(ex, locale));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
+					.body(DiamodoResponse.prepareBackendErrorResponse(locale));
+		}
+	}
+	
+	
+	
+	@RequestMapping(value="/updateChatMessages")
+	public void updateChatMessages()
+	{
+		chatMessageService.updateChatMessages();
+	}
 
-      return ResponseEntity.ok(DiamodoResponse.prepareSuccessResponse(result));
-
-    } catch (DiamodoCheckedException ex) {
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareFailureResponse(ex, locale));
-    } catch (Exception e) {
-      e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareBackendErrorResponse(locale));
-    }
-
-  }
-
- 
-  @RequestMapping(method = RequestMethod.POST, value = "/inviteMembersToConversation",
-      produces = {"application/json"})
-  public Object inviteNewMembers(@RequestHeader(name = "clientId", required = true) String clientId,
-      @RequestHeader(name = "userToken", required = true) String userToken,
-      @RequestBody InviteMembersToConversationRequest inviteMembersToConversationRequest, Locale locale) {
-
-    try {
-      diamodoManagement.inviteMemberToConversation(clientId, inviteMembersToConversationRequest);
-      return ResponseEntity.ok(DiamodoResponse.prepareDefaultSuccessResponse(locale));
- 
-    } catch (DiamodoCheckedException ex) {
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareFailureResponse(ex, locale));
-    } catch (Exception e) {
-      e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(
-          DiamodoResponse.prepareBackendErrorResponse(locale));
-    }
-  }
-  
-  
-    
-
-  
 }

@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import com.queue.diamodo.common.document.Friendship;
+import com.queue.diamodo.common.document.FriendshipHistory;
 import com.queue.diamodo.dataaccess.dto.ClientInfo;
 import com.queue.diamodo.dataaccess.dto.FriendRepresentationDTO;
 import com.queue.diamodo.dataaccess.dto.FriendSearchResult;
@@ -49,6 +50,8 @@ public interface FriendshipDAO extends MongoRepository<FriendSearchResult, Strin
   void updateFriendshipReciever(String friendId, String id);
 
   void updatePartTwoFriendshipStatus(String friendId, String id, int friendShipStatusRecieved);
+
+  void addFriendshipHistory(String friendshipId, FriendshipHistory friendshipHistory);
 
 
 

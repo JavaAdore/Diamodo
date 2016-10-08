@@ -1,5 +1,7 @@
 package com.queue.diamodo.business.serviceimpl;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +12,8 @@ import com.queue.diamodo.dataaccess.dao.DiamodoClientDAO;
 
 @Service
 public class CommonService {
+
+  Logger LOGGER = LogManager.getLogger(CommonService.class);
 
   @Autowired
   private DiamodoClientDAO diamodoClientDAO;
@@ -111,15 +115,17 @@ public class CommonService {
     }
 
   }
-  
+
   public void validateClientExistance(String clientId) throws DiamodoCheckedException {
     boolean isUserExist = diamodoClientDAO.exists(clientId);
+    LOGGER.debug(
+        String.format("client with id %s does %s exisit", clientId, isUserExist ? "" : " not "));;
     if (!isUserExist) {
       throwDiamodException(DiamodoResourceBundleUtils.USER_IS_NOT_EXIST_CODE,
           DiamodoResourceBundleUtils.USER_IS_NOT_EXIST_KEY);
     }
   }
-  
-  
-  
+
+
+
 }

@@ -3,7 +3,10 @@ package com.queue.diamodo.web.webservice.pushnotification;
 import java.io.Serializable;
 
 import com.queue.diamodo.dataaccess.dto.ConversationIdHolder;
-import com.queue.diamodo.dataaccess.dto.FriendIdHolder;
+import com.queue.diamodo.dataaccess.dto.ConversationMessageIdHolder;
+import com.queue.diamodo.dataaccess.dto.FriendshipIdHolder;
+import com.queue.diamodo.web.webservice.websocket.InboundSocketChatMessage;
+import com.queue.diamodo.web.webservice.websocket.LightConversation;
 
 public class Payload implements Serializable{
 
@@ -12,8 +15,8 @@ public class Payload implements Serializable{
    */
   private static final long serialVersionUID = 1L;
   public static final int FRIENDSHIP_REQUEST_RECIEVED = 1;
-  public static final int CONVERSATION_MESSAGE = 2;
 
+  public static final int CONVERSATION_MESSAGE = 2;
 
 
   private int code;
@@ -34,7 +37,7 @@ public class Payload implements Serializable{
 
     Payload payload = new Payload();
     payload.code = FRIENDSHIP_REQUEST_RECIEVED;
-    payload.data = new FriendIdHolder(friendId);
+    payload.data = new FriendshipIdHolder(friendId);
     return payload;
 
 
@@ -63,6 +66,14 @@ public class Payload implements Serializable{
   @Override
   public String toString() {
     return "Payload [code=" + code + ", data=" + data + "]";
+  }
+
+  public static Payload prepareConversationMessagePayload(LightConversation conversation,
+      InboundSocketChatMessage inboundSocketChatMessage) {
+    Payload payload = new Payload();
+    payload.code = CONVERSATION_MESSAGE;
+    payload.data = new ConversationMessageIdHolder(conversation.getConversationId(), conversation.isGroupChat(), inboundSocketChatMessage.getChatMessageType());
+    return payload;
   }
 
 

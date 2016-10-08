@@ -39,5 +39,11 @@ public interface ChatMessageDAO {
   void inviteMemberToConversation(String conversationId,
       Set<String> memberIds);
 
+String getConversationNameById(String conversationId);
+
+List<Conversation> getAllConversations();
+
+Conversation getIsGroupConversation(String conversationId);
+
 
 }

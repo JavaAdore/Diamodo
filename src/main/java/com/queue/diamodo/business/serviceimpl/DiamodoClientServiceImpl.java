@@ -45,391 +45,349 @@ import com.queue.diamodo.dataaccess.dto.UserWithDeviceInfo;
 @Service
 public class DiamodoClientServiceImpl extends CommonService implements DiamodoClientService {
 
-  Logger logger = LogManager.getLogger(DiamodoClientServiceImpl.class);
-  
-  
-  @Autowired
-  private DiamodoClientDAO diamodoClientDAO;
+	Logger logger = LogManager.getLogger(DiamodoClientServiceImpl.class);
 
+	@Autowired
+	private DiamodoClientDAO diamodoClientDAO;
 
+	@Autowired
+	private DiamodoConfigurations diamodoConfigurations;
 
-  @Autowired
-  private DiamodoConfigurations diamodoConfigurations;
+	@Override
+	public UserInfoDTO signUp(SignUpDTO signUpDTO) throws DiamodoCheckedException {
 
-  @Override
-  public UserInfoDTO signUp(SignUpDTO signUpDTO) throws DiamodoCheckedException {
+		validateSignUpDTO(signUpDTO);
 
-    validateSignUpDTO(signUpDTO);
+		validateUserDublication(signUpDTO.getUserName(), signUpDTO.getEmail());
 
-    validateUserDublication(signUpDTO.getUserName(), signUpDTO.getEmail());
+		signUpDTO.assignRandomToken();
 
-    signUpDTO.assignRandomToken();
+		DiamodoClient diamodoClient = Utils.mapObjectToAnother(signUpDTO, DiamodoClient.class);
 
-    DiamodoClient diamodoClient = Utils.mapObjectToAnother(signUpDTO, DiamodoClient.class);
+		diamodoClient = diamodoClientDAO.save(diamodoClient);
 
-    diamodoClient = diamodoClientDAO.save(diamodoClient);
+		UserInfoDTO userInfoDTO = Utils.mapObjectToAnother(diamodoClient, UserInfoDTO.class);
 
-    UserInfoDTO userInfoDTO = Utils.mapObjectToAnother(diamodoClient, UserInfoDTO.class);
+		return userInfoDTO;
+	}
 
+	private void validateUserDublication(String userName, String email) throws DiamodoCheckedException {
 
-    return userInfoDTO;
-  }
+		DiamodoClient diamodoClient = diamodoClientDAO.getBasicUserInformations(userName, email);
+		if (Utils.isNotEmpty(diamodoClient)) {
+			if (diamodoClient.getUserName().equalsIgnoreCase(userName.trim())) {
+				throw new DiamodoCheckedException(DiamodoResourceBundleUtils.USER_NAME_ALREADY_EXIST_CODE,
+						DiamodoResourceBundleUtils.USER_NAME_ALREADY_EXIST_KEY);
+			}
 
+			if (diamodoClient.getEmail().equalsIgnoreCase(email.trim())) {
+				throw new DiamodoCheckedException(DiamodoResourceBundleUtils.EMAIL_ALREADY_EXIST_CODE,
+						DiamodoResourceBundleUtils.EMAIL_ALREADY_EXIST_KEY);
+			}
 
-  private void validateUserDublication(String userName, String email)
-      throws DiamodoCheckedException {
+		}
 
-    DiamodoClient diamodoClient = diamodoClientDAO.getBasicUserInformations(userName, email);
-    if (Utils.isNotEmpty(diamodoClient)) {
-      if (diamodoClient.getUserName().equalsIgnoreCase(userName.trim())) {
-        throw new DiamodoCheckedException(DiamodoResourceBundleUtils.USER_NAME_ALREADY_EXIST_CODE,
-            DiamodoResourceBundleUtils.USER_NAME_ALREADY_EXIST_KEY);
-      }
+	}
 
+	private void validateSignUpDTO(SignUpDTO signUpDTO) throws DiamodoCheckedException {
 
-      if (diamodoClient.getEmail().equalsIgnoreCase(email.trim())) {
-        throw new DiamodoCheckedException(DiamodoResourceBundleUtils.EMAIL_ALREADY_EXIST_CODE,
-            DiamodoResourceBundleUtils.EMAIL_ALREADY_EXIST_KEY);
-      }
+		validateEmail(signUpDTO.getEmail());
 
-    }
+		validateUserName(signUpDTO.getUserName());
 
-  }
+		validateFirstName(signUpDTO.getFirstName());
 
-  private void validateSignUpDTO(SignUpDTO signUpDTO) throws DiamodoCheckedException {
+		validateLastName(signUpDTO.getLastName());
 
+		validatePassword(signUpDTO.getPassword());
 
-    validateEmail(signUpDTO.getEmail());
+	}
 
-    validateUserName(signUpDTO.getUserName());
+	@Override
+	public UserInfoDTO login(LoginDTO loginDTO) throws DiamodoCheckedException {
 
-    validateFirstName(signUpDTO.getFirstName());
+		validateLoginDTO(loginDTO);
 
-    validateLastName(signUpDTO.getLastName());
+		String authenticationAttribute = loginDTO.getLoginAttribute();
 
-    validatePassword(signUpDTO.getPassword());
+		DiamodoClient diamodoClient = null;
 
+		if (Utils.isEmail(authenticationAttribute)) {
 
+			diamodoClient = validateLoginByEmail(authenticationAttribute);
 
-  }
+		} else {
 
+			diamodoClient = validateLoginByUserName(authenticationAttribute);
 
+		}
 
-  @Override
-  public UserInfoDTO login(LoginDTO loginDTO) throws DiamodoCheckedException {
+		matchPasswords(loginDTO.getPassword(), diamodoClient.getPassword());
 
-    validateLoginDTO(loginDTO);
+		validateAccountStatus(diamodoClient);
 
-    String authenticationAttribute = loginDTO.getLoginAttribute();
+		diamodoClient.assignRandomToken();
 
-    DiamodoClient diamodoClient = null;
+		updateClientUserToken(diamodoClient.getId(), diamodoClient.getUserToken());
 
-    if (Utils.isEmail(authenticationAttribute)) {
+		UserInfoDTO userInfoDTO = Utils.mapObjectToAnother(diamodoClient, UserInfoDTO.class);
+		return userInfoDTO;
+	}
 
-      diamodoClient = validateLoginByEmail(authenticationAttribute);
+	private void updateClientUserToken(String id, String userToken) {
 
-    } else {
+		diamodoClientDAO.updateUserToken(id, userToken);
 
-      diamodoClient = validateLoginByUserName(authenticationAttribute);
+	}
 
-    }
+	private DiamodoClient validateLoginByUserName(String authenticationAttribute) throws DiamodoCheckedException {
+		validateUserName(authenticationAttribute);
 
-    matchPasswords(loginDTO.getPassword(), diamodoClient.getPassword());
+		DiamodoClient diamodoClient = diamodoClientDAO.getDiamodoClientByUserName(authenticationAttribute);
+		if (Utils.isEmpty(diamodoClient)) {
+			throwDiamodException(DiamodoResourceBundleUtils.USER_NAME_DOESNT_EXIST_CODE,
+					DiamodoResourceBundleUtils.USER_NAME_DOESNT_EXIST_KEY);
+		}
+		return diamodoClient;
+	}
 
-    validateAccountStatus(diamodoClient);
+	private DiamodoClient validateLoginByEmail(String authenticationAttribute) throws DiamodoCheckedException {
 
-    diamodoClient.assignRandomToken();
+		validateEmail(authenticationAttribute);
 
-    updateClientUserToken(diamodoClient.getId(), diamodoClient.getUserToken());
+		DiamodoClient diamodoClient = diamodoClientDAO.getDiamodoClientByEmail(authenticationAttribute);
+		if (Utils.isEmpty(diamodoClient)) {
+			throwDiamodException(DiamodoResourceBundleUtils.EMAIL_DOESNT_EXIST_CODE,
+					DiamodoResourceBundleUtils.EMAIL_DOESNT_EXIST_KEY);
+		}
+		return diamodoClient;
 
-    UserInfoDTO userInfoDTO = Utils.mapObjectToAnother(diamodoClient, UserInfoDTO.class);
-    return userInfoDTO;
-  }
+	}
 
-  private void updateClientUserToken(String id, String userToken) {
+	private void validateAccountStatus(DiamodoClient diamodoClient) throws DiamodoCheckedException {
+		// TODO check if account is suspended or locked or deleted or whatever
 
-    diamodoClientDAO.updateUserToken(id, userToken);
+	}
 
-  }
+	private void matchPasswords(String password, String password2) throws DiamodoCheckedException {
+		if (!password.equals(password2)) {
+			throwDiamodException(DiamodoResourceBundleUtils.BAD_CREDENTIALS_CODE,
+					DiamodoResourceBundleUtils.BAD_CREDENTIALS_KEY);
+		}
 
+	}
 
-  private DiamodoClient validateLoginByUserName(String authenticationAttribute)
-      throws DiamodoCheckedException {
-    validateUserName(authenticationAttribute);
+	private void validateLoginDTO(LoginDTO loginDTO) throws DiamodoCheckedException {
+		if (Utils.isEmpty(loginDTO.getLoginAttribute())) {
+			throw new DiamodoCheckedException(DiamodoResourceBundleUtils.USERNAME_OR_EMAIL_IS_REQUIRED_CODE,
+					DiamodoResourceBundleUtils.USERNAME_OR_EMAIL_IS_REQUIRED_KEY);
+		}
 
-    DiamodoClient diamodoClient =
-        diamodoClientDAO.getDiamodoClientByUserName(authenticationAttribute);
-    if (Utils.isEmpty(diamodoClient)) {
-      throwDiamodException(DiamodoResourceBundleUtils.USER_NAME_DOESNT_EXIST_CODE,
-          DiamodoResourceBundleUtils.USER_NAME_DOESNT_EXIST_KEY);
-    }
-    return diamodoClient;
-  }
+		if (Utils.isEmpty(loginDTO.getPassword())) {
+			throw new DiamodoCheckedException(DiamodoResourceBundleUtils.PASSWORD_IS_REQUIRED_CODE,
+					DiamodoResourceBundleUtils.PASSWORD_IS_REQUIRED_KEY);
+		}
 
-  private DiamodoClient validateLoginByEmail(String authenticationAttribute)
-      throws DiamodoCheckedException {
+	}
 
-    validateEmail(authenticationAttribute);
+	@Override
+	public void updateClientProfileImagePath(String clientId, String fullFileName) throws DiamodoCheckedException {
 
-    DiamodoClient diamodoClient = diamodoClientDAO.getDiamodoClientByEmail(authenticationAttribute);
-    if (Utils.isEmpty(diamodoClient)) {
-      throwDiamodException(DiamodoResourceBundleUtils.EMAIL_DOESNT_EXIST_CODE,
-          DiamodoResourceBundleUtils.EMAIL_DOESNT_EXIST_KEY);
-    }
-    return diamodoClient;
+		validateClientExistance(clientId);
 
-  }
+		ProfileImage currentProfileImage = getClientProfileImage(clientId);
 
-  private void validateAccountStatus(DiamodoClient diamodoClient) throws DiamodoCheckedException {
-    // TODO check if account is suspended or locked or deleted or whatever
+		diamodoClientDAO.addProfileImageToUserHistory(clientId, currentProfileImage);
 
-  }
+		diamodoClientDAO.setCurrentProfileImage(clientId, new ProfileImage(fullFileName));
 
-  private void matchPasswords(String password, String password2) throws DiamodoCheckedException {
-    if (!password.equals(password2)) {
-      throwDiamodException(DiamodoResourceBundleUtils.BAD_CREDENTIALS_CODE,
-          DiamodoResourceBundleUtils.BAD_CREDENTIALS_KEY);
-    }
+	}
 
-  }
+	private ProfileImage getClientProfileImage(String clientId) {
 
+		return diamodoClientDAO.getClientProfileImage(clientId);
+	}
 
+	@Override
+	public String updateClientProfileImagePath(String clientId, ClientImageHolder clientImageHolder)
+			throws DiamodoCheckedException {
 
-  private void validateLoginDTO(LoginDTO loginDTO) throws DiamodoCheckedException {
-    if (Utils.isEmpty(loginDTO.getLoginAttribute())) {
-      throw new DiamodoCheckedException(
-          DiamodoResourceBundleUtils.USERNAME_OR_EMAIL_IS_REQUIRED_CODE,
-          DiamodoResourceBundleUtils.USERNAME_OR_EMAIL_IS_REQUIRED_KEY);
-    }
+		validateClientImageHolder(clientImageHolder);
 
-    if (Utils.isEmpty(loginDTO.getPassword())) {
-      throw new DiamodoCheckedException(DiamodoResourceBundleUtils.PASSWORD_IS_REQUIRED_CODE,
-          DiamodoResourceBundleUtils.PASSWORD_IS_REQUIRED_KEY);
-    }
+		validateClientExistance(clientId);
 
+		String fullFileName = saveImageToFile(clientId, clientImageHolder.getBase64Image());
 
+		updateClientProfileImagePath(clientId, fullFileName);
 
-  }
+		return fullFileName;
 
+	}
 
-  @Override
-  public void updateClientProfileImagePath(String clientId, String fullFileName)
-      throws DiamodoCheckedException {
+	private String saveImageToFile(String clientId, String base64Image) throws DiamodoCheckedException {
+		String fullFileName = clientId + "_" + new Random().nextLong();
+		;
+		fullFileName = Utils.fixFileName(fullFileName);
 
-    validateClientExistance(clientId);
+		try (InputStream is = new ByteArrayInputStream(Base64.decode(base64Image.getBytes()));
+				OutputStream os = new FileOutputStream(
+						diamodoConfigurations.DEFAULT_UPLOAD_PROFILE_PICTURE_FOLDER_LOCATION + File.separator
+								+ fullFileName)
 
-    ProfileImage currentProfileImage = getClientProfileImage(clientId);
+		) {
 
-    diamodoClientDAO.addProfileImageToUserHistory(clientId, currentProfileImage);
+			// OutputStream fos =
+			// new FileOutputStream()
+			// byte[] image = Base64.decode(base64Image.getBytes());
+			// fos.write(image);
 
-    diamodoClientDAO.setCurrentProfileImage(clientId, new ProfileImage(fullFileName));
+			BufferedImage bufferedImage = ImageIO.read(is);
 
+			ImageIO.write(bufferedImage, "png", os);
 
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			throwDiamodException(DiamodoResourceBundleUtils.INVALID_FILE_FORMAT_CODE,
+					DiamodoResourceBundleUtils.INVALID_FILE_FORMAT_KEY);
 
-  }
+		}
+		return fullFileName;
+	}
 
+	private void validateClientImageHolder(ClientImageHolder clientImageHolder) throws DiamodoCheckedException {
 
-  private ProfileImage getClientProfileImage(String clientId) {
+		if (Utils.isEmpty(clientImageHolder) || Utils.isEmpty(clientImageHolder.getBase64Image())) {
+			throwDiamodException(DiamodoResourceBundleUtils.PROFILE_IMAGE_IS_REQUIRED_CODE,
+					DiamodoResourceBundleUtils.PROFILE_IMAGE_IS_REQUIRED_KEY);
+		}
+		if (!Base64.isBase64(clientImageHolder.getBase64Image().getBytes())) {
+			throwDiamodException(DiamodoResourceBundleUtils.INVALID_FILE_FORMAT_CODE,
+					DiamodoResourceBundleUtils.INVALID_FILE_FORMAT_KEY);
+		}
+	}
 
-    return diamodoClientDAO.getClientProfileImage(clientId);
-  }
+	@Override
+	public ClientInfo updateProfilePicture(String clientId, UpdateProfileDTO updateProfile)
+			throws DiamodoCheckedException {
 
+		validateUpdateProfileDTO(clientId, updateProfile);
 
+		validateClientExistance(clientId);
 
-  @Override
-  public String updateClientProfileImagePath(String clientId, ClientImageHolder clientImageHolder)
-      throws DiamodoCheckedException {
+		Map<String, Object> fieldsToUpdate = new HashMap<String, Object>();
+		if (Utils.isNotEmpty(updateProfile.getFirstName())) {
+			validateFirstName(updateProfile.getFirstName());
+			fieldsToUpdate.put("firstName", updateProfile.getFirstName());
+		}
 
-    validateClientImageHolder(clientImageHolder);
+		if (Utils.isNotEmpty(updateProfile.getLastName())) {
+			validateLastName(updateProfile.getLastName());
+			fieldsToUpdate.put("lastName", updateProfile.getLastName());
+		}
 
-    validateClientExistance(clientId);
+		if (Utils.isNotEmpty(updateProfile.getPassword())) {
+			validatePassword(updateProfile.getPassword());
+			fieldsToUpdate.put("password", updateProfile.getPassword());
+		}
 
-    String fullFileName = saveImageToFile(clientId, clientImageHolder.getBase64Image());
+		if (Utils.isNotEmpty(updateProfile.getImageHolder()) && updateProfile.getImageHolder().hasContent()) {
+			String fullImagePath = saveImageToFile(clientId, updateProfile.getImageHolder().getBase64Image());
 
-    updateClientProfileImagePath(clientId, fullFileName);
+			updateClientProfileImagePath(clientId, fullImagePath);
 
-    return fullFileName;
+		}
 
+		diamodoClientDAO.updateClientInfo(clientId, fieldsToUpdate);
 
+		return diamodoClientDAO.getClientInfo(clientId);
+	}
 
-  }
+	private void validateUpdateProfileDTO(String clientId, UpdateProfileDTO updateProfile)
+			throws DiamodoCheckedException {
 
+		if (Utils.isEmpty(clientId)) {
+			throwDiamodException(DiamodoResourceBundleUtils.CLIENT_ID_IS_REQUIRED_CODE,
+					DiamodoResourceBundleUtils.CLIENT_ID_IS_REQUIRED_KEY);
+		}
+		if (Utils.isEmpty(updateProfile)) {
+			throwDiamodException(DiamodoResourceBundleUtils.UPDATE_PROFILE_DTO_SHOULD_NOT_BE_EMPTY_CODE,
+					DiamodoResourceBundleUtils.UPDATE_PROFILE_DTO_SHOULD_NOT_BE_EMPTY_KEY);
+		}
+		if (Utils.isEmpty(updateProfile.getId())) {
+			throwDiamodException(DiamodoResourceBundleUtils.UPDATE_PROFILE_MISSING_CLIENT_ID_CODE,
+					DiamodoResourceBundleUtils.UPDATE_PROFILE_MISSING_CLIENT_ID_KEY);
+		}
 
+		if (!clientId.equals(updateProfile.getId())) {
+			throwDiamodException(DiamodoResourceBundleUtils.YOU_ARE_TRYING_TO_UPDATE_MEMBER_PROFILE_CODE,
+					DiamodoResourceBundleUtils.YOU_ARE_TRYING_TO_UPDATE_MEMBER_PROFILE_KEY);
 
-  private String saveImageToFile(String clientId, String base64Image)
-      throws DiamodoCheckedException {
-    String fullFileName = clientId + "_" + new Random().nextLong();;
-    fullFileName = Utils.fixFileName(fullFileName);
+		}
 
-    try (InputStream is = new ByteArrayInputStream(Base64.decode(base64Image.getBytes()));
-        OutputStream os =
-            new FileOutputStream(
-                diamodoConfigurations.DEFAULT_UPLOAD_PROFILE_PICTURE_FOLDER_LOCATION
-                    + File.separator + fullFileName)
+	}
 
-    ) {
+	@Override
+	public void updateDeviceToken(String clientId, String deviceType, String deviceToken)
+			throws DiamodoCheckedException {
 
-      // OutputStream fos =
-      // new FileOutputStream()
-      // byte[] image = Base64.decode(base64Image.getBytes());
-      // fos.write(image);
+		validateClientExistance(clientId);
+		validateDeviceType(deviceType);
+		valdiateDeviceToken(deviceToken);
+		updateClientDevice(clientId, deviceType, deviceToken);
 
-      BufferedImage bufferedImage = ImageIO.read(is);
+	}
 
-      ImageIO.write(bufferedImage, "png", os);
+	private void updateClientDevice(String clientId, String deviceType, String deviceToken) {
 
-    } catch (Exception ex) {
-      ex.printStackTrace();
-      throwDiamodException(DiamodoResourceBundleUtils.INVALID_FILE_FORMAT_CODE,
-          DiamodoResourceBundleUtils.INVALID_FILE_FORMAT_KEY);
+		ClientDevice clientDevice = new ClientDevice();
+		clientDevice.setDeviceToken(deviceToken);
+		clientDevice.setDeviceType(deviceType);
+		diamodoClientDAO.updateClientDevice(clientId, clientDevice);
 
-    }
-    return fullFileName;
-  }
+	}
 
-  private void validateClientImageHolder(ClientImageHolder clientImageHolder)
-      throws DiamodoCheckedException {
+	private void valdiateDeviceToken(String deviceToken) throws DiamodoCheckedException {
 
-    if (Utils.isEmpty(clientImageHolder) || Utils.isEmpty(clientImageHolder.getBase64Image())) {
-      throwDiamodException(DiamodoResourceBundleUtils.PROFILE_IMAGE_IS_REQUIRED_CODE,
-          DiamodoResourceBundleUtils.PROFILE_IMAGE_IS_REQUIRED_KEY);
-    }
-    if (!Base64.isBase64(clientImageHolder.getBase64Image().getBytes())) {
-      throwDiamodException(DiamodoResourceBundleUtils.INVALID_FILE_FORMAT_CODE,
-          DiamodoResourceBundleUtils.INVALID_FILE_FORMAT_KEY);
-    }
-  }
+		if (Utils.isEmpty(deviceToken)) {
+			throwDiamodException(DiamodoResourceBundleUtils.DEVICE_TOKEN_IS_REQUIRED_CODE,
+					DiamodoResourceBundleUtils.DEVICE_TOKEN_IS_REQUIRED_KEY);
+		}
+	}
 
+	private void validateDeviceType(String deviceType) throws DiamodoCheckedException {
 
-  @Override
-  public ClientInfo updateProfilePicture(String clientId, UpdateProfileDTO updateProfile)
-      throws DiamodoCheckedException {
+		if (!ClientDevice.isAcceptedDevice(deviceType)) {
+			throwDiamodException(DiamodoResourceBundleUtils.NOT_ACCEPTED_DEVICE_TYPE_CODE,
+					DiamodoResourceBundleUtils.NOT_ACCEPTED_DEVICE_TYPE_KEY);
+		}
 
-    validateUpdateProfileDTO(clientId, updateProfile);
+	}
 
-    validateClientExistance(clientId);
+	@Override
+	public boolean isValidClientToken(String clientId, String userToken) {
 
-    Map<String, Object> fieldsToUpdate = new HashMap<String, Object>();
-    if (Utils.isNotEmpty(updateProfile.getFirstName())) {
-      validateFirstName(updateProfile.getFirstName());
-      fieldsToUpdate.put("firstName", updateProfile.getFirstName());
-    }
+		DiamodoClient diamodoClient = diamodoClientDAO.getUserByIdAndUserToken(clientId, userToken);
 
-    if (Utils.isNotEmpty(updateProfile.getLastName())) {
-      validateLastName(updateProfile.getLastName());
-      fieldsToUpdate.put("lastName", updateProfile.getLastName());
-    }
+		boolean authenticationResult = diamodoClient != null;
 
-    if (Utils.isNotEmpty(updateProfile.getPassword())) {
-      validatePassword(updateProfile.getPassword());
-      fieldsToUpdate.put("password", updateProfile.getPassword());
-    }
+		return authenticationResult;
 
+	}
 
+	@Override
+	public UserWithDeviceInfo getClientWithDeviceInfo(String recieverId) {
 
-    if (Utils.isNotEmpty(updateProfile.getImageHolder())
-        && updateProfile.getImageHolder().hasContent()) {
-      String fullImagePath =
-          saveImageToFile(clientId, updateProfile.getImageHolder().getBase64Image());
+		UserWithDeviceInfo userWithDeviceInfo = diamodoClientDAO.getClientWithDeviceInfo(recieverId);
 
-      updateClientProfileImagePath(clientId, fullImagePath);
+		return userWithDeviceInfo;
 
-    }
+	}
 
+	@Override
+	public ClientInfo getClientById(String clientId) {
+		ClientInfo clientInfo = diamodoClientDAO.getClientInfo(clientId);
+		return clientInfo;
 
-    diamodoClientDAO.updateClientInfo(clientId, fieldsToUpdate);
-
-    return diamodoClientDAO.getClientInfo(clientId);
-  }
-
-
-  private void validateUpdateProfileDTO(String clientId, UpdateProfileDTO updateProfile)
-      throws DiamodoCheckedException {
-
-    if (Utils.isEmpty(clientId)) {
-      throwDiamodException(DiamodoResourceBundleUtils.CLIENT_ID_IS_REQUIRED_CODE,
-          DiamodoResourceBundleUtils.CLIENT_ID_IS_REQUIRED_KEY);
-    }
-    if (Utils.isEmpty(updateProfile)) {
-      throwDiamodException(DiamodoResourceBundleUtils.UPDATE_PROFILE_DTO_SHOULD_NOT_BE_EMPTY_CODE,
-          DiamodoResourceBundleUtils.UPDATE_PROFILE_DTO_SHOULD_NOT_BE_EMPTY_KEY);
-    }
-    if (Utils.isEmpty(updateProfile.getId())) {
-      throwDiamodException(DiamodoResourceBundleUtils.UPDATE_PROFILE_MISSING_CLIENT_ID_CODE,
-          DiamodoResourceBundleUtils.UPDATE_PROFILE_MISSING_CLIENT_ID_KEY);
-    }
-
-    if (!clientId.equals(updateProfile.getId())) {
-      throwDiamodException(DiamodoResourceBundleUtils.YOU_ARE_TRYING_TO_UPDATE_MEMBER_PROFILE_CODE,
-          DiamodoResourceBundleUtils.YOU_ARE_TRYING_TO_UPDATE_MEMBER_PROFILE_KEY);
-
-    }
-
-  }
-
-
-  @Override
-  public void updateDeviceToken(String clientId, String deviceType, String deviceToken)
-      throws DiamodoCheckedException {
-
-    validateClientExistance(clientId);
-    validateDeviceType(deviceType);
-    valdiateDeviceToken(deviceToken);
-    updateClientDevice(clientId, deviceType, deviceToken);
-
-  }
-
-
-  private void updateClientDevice(String clientId, String deviceType, String deviceToken) {
-
-
-    ClientDevice clientDevice = new ClientDevice();
-    clientDevice.setDeviceToken(deviceToken);
-    clientDevice.setDeviceType(deviceType);
-    diamodoClientDAO.updateClientDevice(clientId, clientDevice);
-
-  }
-
-
-  private void valdiateDeviceToken(String deviceToken) throws DiamodoCheckedException {
-
-    if (Utils.isEmpty(deviceToken)) {
-      throwDiamodException(DiamodoResourceBundleUtils.DEVICE_TOKEN_IS_REQUIRED_CODE,
-          DiamodoResourceBundleUtils.DEVICE_TOKEN_IS_REQUIRED_KEY);
-    }
-  }
-
-
-  private void validateDeviceType(String deviceType) throws DiamodoCheckedException {
-
-    if (!ClientDevice.isAcceptedDevice(deviceType)) {
-      throwDiamodException(DiamodoResourceBundleUtils.NOT_ACCEPTED_DEVICE_TYPE_CODE,
-          DiamodoResourceBundleUtils.NOT_ACCEPTED_DEVICE_TYPE_KEY);
-    }
-
-  }
-
-
-  @Override
-  public boolean isValidClientToken(String clientId, String userToken) {
-
-    DiamodoClient diamodoClient = diamodoClientDAO.getUserByIdAndUserToken(clientId, userToken);
-    
-    
-    boolean authenticationResult = diamodoClient != null;
-    
-    return authenticationResult;
-
-  }
-
-
-  @Override
-  public UserWithDeviceInfo getClientWithDeviceInfo(String recieverId) {
-   
-    UserWithDeviceInfo userWithDeviceInfo = diamodoClientDAO.getClientWithDeviceInfo(recieverId);
-    return userWithDeviceInfo;
-  }
-
-
+	}
 
 }

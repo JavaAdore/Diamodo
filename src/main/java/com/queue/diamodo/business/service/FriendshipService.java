@@ -34,5 +34,7 @@ public interface FriendshipService {
 
   Friendship getfriendshipById(String destinationId);
 
+  String deleteFriendship(String clientId, String friendshipId) throws DiamodoCheckedException;
+
 
 }

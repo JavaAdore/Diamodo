@@ -62,6 +62,11 @@ public class DiamodoConfigurations {
   @Value("${X-PUSHBOTS-SECRET}")
   public String X_PUSHBOTS_SECRET;
   
+  @Value("${FIREBASE_AUTHURIZATION}")
+  public String FIREBASE_AUTHURIZATION;
+  
+  @Value("${FIREBASE_URL}")  
+  public String FIREBASE_URL;
   
   
   @Value("${PUSH_NOTIFICATION_DEFAULT_MESSAGE_CONTENT_LENGTH}")

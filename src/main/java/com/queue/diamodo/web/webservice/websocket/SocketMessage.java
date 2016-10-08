@@ -38,6 +38,16 @@ public class SocketMessage implements Serializable {
     return outboundSocketMessage;
   }
 
+  
+  
+  public static SocketMessage prepareRecieveFriendshipDeletationMessage(Object data) {
+    SocketMessage outboundSocketMessage = new SocketMessage();
+    outboundSocketMessage.setData(data);
+    outboundSocketMessage.setSocketMessageType(SocketMessageType.RECIEVE_FRIENDSHIP_DELETATION_MESSAGE);
+    return outboundSocketMessage;
+  }
+  
+  
 
   public boolean isChatMessage() {
     return socketMessageType == SocketMessageType.SEND_MESSAGE_PEER_MESSAGE;

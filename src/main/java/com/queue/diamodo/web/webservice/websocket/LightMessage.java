@@ -20,10 +20,20 @@ public class LightMessage implements Serializable{
   private int chatMessageType;
   
   private Date date;
+  
+  private boolean isGroupChat;
 
   
 
-  public String getSenderId() {
+  public boolean isGroupChat() {
+	return isGroupChat;
+}
+
+public void setGroupChat(boolean isGroupChat) {
+	this.isGroupChat = isGroupChat;
+}
+
+public String getSenderId() {
     return senderId;
   }
 

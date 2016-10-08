@@ -140,6 +140,23 @@ public class DiamodoTemplateBean {
 
     return "-";
   }
+  
+  
+  
+  
+  public String prepareAddToConversationMessage(ClientInfo sender,String conversationName) {
+	    Template template =
+	        velocityEngine.getTemplate("/templates/addToConversationTemplate.vm");
+	    VelocityContext context = new VelocityContext();
+	    context.put("firstName", sender.getFirstName());
+	    context.put("lastName", sender.getLastName());
+	    context.put("conversationName", conversationName);
+
+	    StringWriter writer = new StringWriter();
+	    template.merge(context, writer);
+	    return writer.toString();
+	  }
+	  
 
 
 }

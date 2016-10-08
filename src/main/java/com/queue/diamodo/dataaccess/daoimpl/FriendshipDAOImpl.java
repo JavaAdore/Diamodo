@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,7 @@ import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.queue.diamodo.common.document.DiamodoClient;
 import com.queue.diamodo.common.document.Friendship;
+import com.queue.diamodo.common.document.FriendshipHistory;
 import com.queue.diamodo.common.utils.Utils;
 import com.queue.diamodo.dataaccess.dao.FriendshipDAO;
 import com.queue.diamodo.dataaccess.dto.ClientInfo;
@@ -45,6 +48,8 @@ import com.queue.diamodo.dataaccess.dto.PagingDTO;
 public class FriendshipDAOImpl extends SimpleMongoRepository<FriendSearchResult, String> implements
     FriendshipDAO {
 
+  Logger LOGGER = LogManager.getLogger(FriendshipDAOImpl.class);
+  
   @Autowired
   MongoOperations mongoOperations;
 
@@ -240,8 +245,10 @@ public class FriendshipDAOImpl extends SimpleMongoRepository<FriendSearchResult,
 
   @Override
   public Friendship getfriendshipById(String friendshipId) {
+    Friendship friendship =  mongoOperations.findById(friendshipId, Friendship.class);
+    LOGGER.debug(String.format("friend ship with id %s does%s exsist", friendshipId , friendship==null?" not ":""));
+    return friendship;
 
-    return mongoOperations.findById(friendshipId, Friendship.class);
   }
 
   @Override
@@ -300,6 +307,20 @@ public class FriendshipDAOImpl extends SimpleMongoRepository<FriendSearchResult,
     
     mongoOperations.updateFirst(query , update , Friendship.class);
     
+  }
+
+  @Override
+  public void addFriendshipHistory(String friendshipId, FriendshipHistory friendshipHistory) {
+    
+    Criteria criteria = Criteria.where("_id").is(new ObjectId(friendshipId));
+    
+    Query query = new Query(criteria);
+
+    Update update = new Update();
+    update.push("friendshipHistory", friendshipHistory);
+    
+    mongoOperations.updateFirst(query , update , Friendship.class);
+
   }
 
 

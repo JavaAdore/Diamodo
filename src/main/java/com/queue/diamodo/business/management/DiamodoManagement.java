@@ -100,4 +100,7 @@ public interface DiamodoManagement {
   void sendPushNotificationForChatMessage(LightConversation conversation,
       InboundSocketChatMessage inboundSocketChatMessage, String memberId);
 
+  String deleteFriendship(String clientId, String friendshipId) throws DiamodoCheckedException;
+
+
 }

@@ -35,6 +35,8 @@ public interface DiamodoClientService {
 
   UserWithDeviceInfo getClientWithDeviceInfo(String recieverId);
 
+ClientInfo getClientById(String clientId);
+
 
 
 

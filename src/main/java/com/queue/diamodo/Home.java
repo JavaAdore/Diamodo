@@ -12,6 +12,7 @@ import com.queue.diamodo.dataaccess.dto.BasicClientInfoDTO;
 import com.queue.diamodo.dataaccess.dto.CreateConversationRequest;
 import com.queue.diamodo.dataaccess.dto.GetMyConversationsResponseDTO;
 import com.queue.diamodo.dataaccess.dto.InviteMembersToConversationRequest;
+import com.queue.diamodo.dataaccess.dto.LoginDTO;
 import com.queue.diamodo.dataaccess.dto.PagingDTO;
 import com.queue.diamodo.web.webservice.websocket.GetUnSeenMessagesRequest;
 import com.queue.diamodo.web.webservice.websocket.SocketMessage;
@@ -86,21 +87,38 @@ public class Home {
 //    Locale locale = new Locale("xx");
 //    System.out.println(locale);
 
-	  BasicClientInfoDTO basicClientInfoDTO = new BasicClientInfoDTO();
-	  basicClientInfoDTO.setEmail("mahmoud.eltaieb@gmail.com");
-	  basicClientInfoDTO.setFirstName("Mahmoud");
-	  basicClientInfoDTO.setLastName("Eltaieb");
-	  basicClientInfoDTO.setPassword("123456");
-	  basicClientInfoDTO.setUserName("meltaieb");
+    // BasicClientInfoDTO basicClientInfoDTO = new BasicClientInfoDTO();
+    // basicClientInfoDTO.setEmail("mahmoud.eltaieb@gmail.com");
+    // basicClientInfoDTO.setFirstName("Mahmoud");
+    // basicClientInfoDTO.setLastName("Eltaieb");
+    // basicClientInfoDTO.setPassword("123456");
+    // basicClientInfoDTO.setUserName("meltaieb");
+    // System.out.println(new Gson().toJson(basicClientInfoDTO));
 	  
-	  System.out.println(new Gson().toJson(basicClientInfoDTO));
+	  
+	  PagingDTO PagingDTO = new PagingDTO();
+	  PagingDTO.setNumberOfResultNeeded(10);
+	  PagingDTO.setNumberOfResultsToSkip(0);
+	  System.out.println(new Gson().toJson(PagingDTO));
+	  
+//	  LoginDTO loginDTO = new LoginDTO();
+//	  loginDTO.setLoginAttribute("meltaieb");
+//	  loginDTO.setPassword("123456");
+//	  System.out.println(new Gson().toJson(loginDTO));
+	  
+	  CreateConversationRequest createConversationRequest = new CreateConversationRequest();
+	  createConversationRequest.setConversationName("MyTestConversation");
+
+	  Set<String> ids = new HashSet<String>();
+	  ids.add("57eed6e93405d2457388054c");
+	  ids.add("57f11ad8ac04fb12ab8d5b21");
+	  createConversationRequest.setMemberIds(ids);
+	  
+	  System.out.println(new Gson().toJson(createConversationRequest));
+
 	  
 	  
-//	  PagingDTO PagingDTO = new PagingDTO();
-//	  PagingDTO.setNumberOfResultNeeded(10);
-//	  PagingDTO.setNumberOfResultsToSkip(0);
-//	  System.out.println(new Gson().toJson(PagingDTO));
-	  
+
     
   }
 }

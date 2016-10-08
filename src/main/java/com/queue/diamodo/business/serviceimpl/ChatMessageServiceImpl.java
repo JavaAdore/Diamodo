@@ -45,9 +45,10 @@ public class ChatMessageServiceImpl extends CommonService implements ChatMessage
   public void saveMessageToConversation(String conversationId,
       OutboundChatSocketMessage outboundChatSocketMessage) {
 
-
+	 Conversation conversation = chatMessageDAO.getIsGroupConversation(conversationId);
     ChatMessage chatMessage =
         Utils.mapObjectToAnother(outboundChatSocketMessage, ChatMessage.class);
+    chatMessage.setGroupChat(conversation.isGroupChat());
     chatMessage.getSeenBy().add(new SeenByDTO(new DiamodoClient(outboundChatSocketMessage.getSenderId())));
     chatMessageDAO.pushToConversation(conversationId, chatMessage);
  
@@ -258,6 +259,31 @@ public class ChatMessageServiceImpl extends CommonService implements ChatMessage
 
   }
 
+  @Override
+  public String getConversationName(String conversationId)
+  {
+	  
+	String conversationName =   chatMessageDAO.getConversationNameById(conversationId);
+	return conversationName !=null?conversationName : "";
+	  
+  }
+
+
+
+@Override
+public void updateChatMessages() {
+	List<Conversation> conversations = chatMessageDAO.getAllConversations();
+	conversations.forEach(conversation->
+	{
+		List<ChatMessage>  messages = 	conversation.getChatMessages();
+		messages.forEach(message->
+		{
+			message.setGroupChat(conversation.isGroupChat());
+		});
+		
+		chatMessageDAO.saveConversation(conversation);
+	});
+}
 
 
 }

@@ -23,6 +23,7 @@ import com.queue.diamodo.common.document.Conversation;
 import com.queue.diamodo.common.document.DiamodoClient;
 import com.queue.diamodo.common.utils.Utils;
 import com.queue.diamodo.dataaccess.dto.ClientInfo;
+import com.queue.diamodo.dataaccess.dto.FriendshipIdHolder;
 
 @ServerEndpoint(value = "/userChatSocket/{clientId}/{userToken}",
     decoders = {SocketMessageDecoder.class}, encoders = {SocketMessageEncoder.class})
@@ -70,6 +71,7 @@ public class DiamodoEndPoint extends ApplicationContextHolder {
   private void handleGetUnseenMessages(SocketMessage inboundSocketMessage) {
     GetUnSeenMessagesRequest getUnSeenMessagesRequest =
         parseSocketMessageData(inboundSocketMessage.getData(), GetUnSeenMessagesRequest.class);
+  
     validateGetUnseenMessageRequest(getUnSeenMessagesRequest);
 
     List<OutboundChatSocketMessage> unseenMessages =
@@ -87,11 +89,19 @@ public class DiamodoEndPoint extends ApplicationContextHolder {
     SocketMessage outboundSocketMessage =
         SocketMessage.prepareRecieveGetUnseenMessagesResponse(unseenMessages);
 
+    sendSocketMessageToClient(clientId , outboundSocketMessage);
+    
+
+
+
+  }
+
+  private static void sendSocketMessageToClient(String clientId, SocketMessage outboundSocketMessage) {
     UserSessionsHolder userSessionsHolder = getUserSessionHolder(clientId);
-    userSessionsHolder.recieveSocketMessage(outboundSocketMessage);
-
-
-
+    if(Utils.isNotEmpty(userSessionsHolder))
+    {
+      userSessionsHolder.recieveSocketMessage(outboundSocketMessage);    
+    }
   }
 
   private void validateGetUnseenMessageRequest(GetUnSeenMessagesRequest getUnSeenMessagesRequest) {
@@ -100,6 +110,7 @@ public class DiamodoEndPoint extends ApplicationContextHolder {
   }
 
   private void handleChatMessage(SocketMessage inboundSocketMessage) throws DiamodoCheckedException {
+      Map<String,String>seenBy = new HashMap();
 
     InboundSocketChatMessage inboundSocketChatMessage =
         parseSocketMessageData(inboundSocketMessage.getData(), InboundSocketChatMessage.class);
@@ -128,17 +139,16 @@ public class DiamodoEndPoint extends ApplicationContextHolder {
     LightConversation conversation =
         getCachedConversation(inboundSocketChatMessage.getDestinationId());
     conversation.getConversationMemebersId().parallelStream().forEach(memberId -> {
-
+    	outboundChatSocketMessage.setGroupChat(conversation.isGroupChat());
       boolean peerHasActiveSession = isUserHasActiveSession(memberId);
 
 
-
-      if (peerHasActiveSession) {
+      if (peerHasActiveSession) 
+      {
         // sending message to sender and reciever
 
         sendSocketChatMessageTo(outboundChatSocketMessage, memberId);
-        diamodoManagement.markConversationAsSeen(memberId, outboundChatSocketMessage.getDestinationId());  
-
+        seenBy.put(memberId, outboundChatSocketMessage.getDestinationId());
       } else {
 
         sendPushNotificationToMember(conversation , inboundSocketChatMessage, memberId);
@@ -148,13 +158,15 @@ public class DiamodoEndPoint extends ApplicationContextHolder {
     });
 
     saveMessageToConversation(inboundSocketChatMessage.getDestinationId(),
-        outboundChatSocketMessage);
+        outboundChatSocketMessage,seenBy);
+    
+
 
 
   }
 
   private void saveMessageToConversation(final String conversationId,
-      final OutboundChatSocketMessage outboundChatSocketMessage) {
+      final OutboundChatSocketMessage outboundChatSocketMessage, Map<String, String> seenBy) {
 
     if (outboundChatSocketMessage != null) {
       taskExecutor.execute(new Runnable() {
@@ -163,6 +175,8 @@ public class DiamodoEndPoint extends ApplicationContextHolder {
         public void run() {
 
           diamodoManagement.saveMessageToConversatation(conversationId, outboundChatSocketMessage);
+          for(String key : seenBy.keySet())
+          diamodoManagement.markConversationAsSeen(key, seenBy.get(key));
         }
 
       });
@@ -367,6 +381,15 @@ public class DiamodoEndPoint extends ApplicationContextHolder {
       lightConversation.removeMember(clientId);
     }
 
+  }
+
+  public static void sendFriendshipDeletationSocketMessage(String otherPartId,
+      String friendshipId) {
+    FriendshipIdHolder friendshipIdHolder = new FriendshipIdHolder(friendshipId);
+      SocketMessage socketMessage =SocketMessage.prepareRecieveFriendshipDeletationMessage(friendshipIdHolder);
+     
+      sendSocketMessageToClient(otherPartId , socketMessage);
+    
   }
 
 }
